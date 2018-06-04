@@ -17,6 +17,8 @@ Vehicle::Vehicle(int id, double x, double y, double vx, double vy, double s, dou
     this->t = t;
     
     this->theta = getTheta(vx, vy);    
+    this->isInLane = isWithinLane(this->d, 4.0, 1.5);;
+    this->lane =  calculateLane(this->d, 4.0, 1.5);
 }
 
 Vehicle Vehicle::predictNextPosition(double t1, const vector<double> &maps_x, const vector<double> &maps_y){

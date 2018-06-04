@@ -5,7 +5,8 @@
 
 using namespace std;
 
-class Vehicle{
+class Vehicle
+{
     public:
         int id;
         
@@ -23,6 +24,7 @@ class Vehicle{
 
         // We can compute those
         int lane;
+        bool isInLane;
         double theta;
 
         /**
