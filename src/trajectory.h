@@ -11,8 +11,15 @@ class Trajectory
 
         vector<double> xs;
         vector<double> ys;
-        vector<double> ss;
+        
+        vector<double> ss;        
+        vector<double> s_vels;
+        vector<double> s_accs;
+        
         vector<double> ds;
+        vector<double> d_vels;
+        vector<double> d_accs;
+        
         vector<double> yaws;
 
         /**
@@ -26,14 +33,21 @@ class Trajectory
          */ 
         virtual ~Trajectory();
 
-        void add(double x, double y, double s, double d, double yaw);
+        void add(double x, double y, 
+                 double s, double s_dot, double s_dot_dot,
+                 double d, double d_dot, double d_dot_dot,
+                 double yaw);
         int size();
         
         /**
+         * Calculates the average squared acceleration, also known as the jerk, over all points.
+         * 
          * @param point_interval the interval in seconds between two consecutive points
          * @return the average longitudinal speed across all points in the trajectory
          */
         double averageSpeed(double point_interval);
+
+
         
         /**
          * Computes the longitudinal and lateral acceleration
@@ -49,6 +63,7 @@ class Trajectory
          */ 
         void removeFirstN(int n);
 
+        
 
 
 };

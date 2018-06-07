@@ -12,6 +12,7 @@
 #include "vehicle.h"
 #include "helpers.h"
 #include "trajectory.h"
+#include "collision_detector.h"
 
 using namespace std;
 using Eigen::MatrixXd;
@@ -32,7 +33,11 @@ int PATH_LENGTH = 50;
 int PREVIOUS_PATH_POINTS_TO_KEEP = 40;
 
 // The maximum duration of a maneuvre in seconds
-double MAX_MANEUVER_DURATION = 1.0;
+double MAX_MANEUVER_DURATION = 1;
+
+double current_acceleration = 1.0;
+
+double MAX_ACCELERATION = 1.3;
 
 // Checks if the SocketIO event has JSON data.
 // If there is data the JSON object in string format will be returned,
@@ -225,9 +230,12 @@ int main() {
 						// TODO predict future position of vehicles
 						// create a vector<vector <Vehicle>> for the next
 						// T timesteps (20ms timestep)
-
+            double acc_sign = 1.0;
             int myLane = calculateLane(car_d, 4.0, 1.5);
             bool withinLane = isWithinLane(car_d, 4.0, 1.5);
+            
+
+            CollisionDetector cdetector = CollisionDetector(main_trajectory);
             if(!withinLane)
             {
               // cout << "Car lane is outside lane - expected lane " << myLane << endl;
@@ -237,6 +245,12 @@ int main() {
               // cout << "Car lane is " << myLane << endl;
               for(const Vehicle& v : vehicles)
               {
+                vector<double> collision = cdetector.predictCollision(v, 0.02);
+                // if(collision.size() > 0)
+                // {
+                //   cout 
+                // }
+
                 if(!v.isInLane)
                 {
                   continue;
@@ -244,10 +258,15 @@ int main() {
 
                 if(v.lane == myLane)
                 {
+                  
                   double dist = distance(car_x, car_y, v.x, v.y);
                   double s_diff = v.s - car_s;
-                  // cout << "Vehicle " << v.id << " is " << dist << "m (s-diff=" << s_diff
-                  //      << ") away in the same lane " << endl;
+                  cout << "Vehicle " << v.id << " is " << dist << "m (s-diff=" << s_diff
+                       << ") away in the same lane " << endl;
+                  if(car_s < v.s && s_diff < 25.0){
+                    acc_sign = -1;
+                    cout << "**** Will decelerate" << endl;
+                  }
                 }
               }
 
@@ -259,7 +278,8 @@ int main() {
           	vector<double> next_x_vals;
           	vector<double> next_y_vals;
 						double car_yaw_rad = deg2rad(car_yaw);
-						// double dist_inc = 0.5;
+						
+            // double dist_inc = 0.5;
 						// for(int i = 0; i < 50; ++i){
 						// 	next_x_vals.push_back(car_x + (dist_inc * i) * cos(deg2rad(car_yaw)));
 						// 	next_y_vals.push_back(car_y + (dist_inc * i) * sin(deg2rad(car_yaw)));
@@ -268,7 +288,8 @@ int main() {
             int prev_path_size = previous_path_x.size();
             if(prev_path_size > 0 && prev_path_size < PATH_LENGTH)
             {
-              main_trajectory.removeFirstN(main_trajectory.size() - prev_path_size - 1);
+              // Make sure our main trajectory mirrors points in the previous_path
+              main_trajectory.removeFirstN(main_trajectory.size() - prev_path_size);
               vector<double> a_a = main_trajectory.averageAcceleration(0.02);
               cout << "Trajectories updated: size=" << main_trajectory.size() 
                    << " avg speed=" << main_trajectory.averageSpeed(0.02) << "mps" 
@@ -276,9 +297,7 @@ int main() {
             }
 
             for(int i = 0; i < PATH_LENGTH && i < previous_path_x.size(); ++i)
-            {
-              
-
+            {              
               next_x_vals.push_back(previous_path_x[i]);
               next_y_vals.push_back(previous_path_y[i]);
             }
@@ -349,23 +368,25 @@ int main() {
             }
             cout << "Final speed = " << final_speed << endl;
             
-            vector<double> start_s = {car_s, car_speed_mps, acc_s};
-            vector<double> end_s = {car_s + final_speed, final_speed, final_acc};
+            
 
-            vector<double> start_d = {car_d, 0.0, 0.0};
-            vector<double> end_d = {car_d, 0, 0};
-
-            vector<double> coeffs_s = JMT(start_s, end_s, MAX_MANEUVER_DURATION);
-            vector<double> coeffs_d = JMT(start_d, end_d, MAX_MANEUVER_DURATION);
-
-            if(next_x_vals.size() == 0)
+            if(main_trajectory.size() == 0)
             {
+
+              vector<double> start_s = {car_s, 0.0, 0.0};
+              vector<double> end_s = {car_s + 8, 8, 8};
+
+              vector<double> start_d = {car_d, 0.0, 0.0};
+              vector<double> end_d = {car_d, 0, 0};
+
+              vector<double> coeffs_s = JMT(start_s, end_s, MAX_MANEUVER_DURATION);
+              vector<double> coeffs_d = JMT(start_d, end_d, MAX_MANEUVER_DURATION);
+
               cout << "\n\n******* COMPUTING " << endl;
               cout << "Start s = " << start_s[0] << ", end s = " << end_s[0] << " acc s=" << acc_s << endl;
               cout << "Car speed MPH=" << car_speed << " mps=" << car_speed_mps << " final speed=" << final_speed << endl;
-
               
-              main_trajectory.add(car_x, car_y, car_s, car_d, car_yaw_rad);
+              // main_trajectory.add(car_x, car_y, car_s, car_d, car_yaw_rad);
 
               for(int i = 0; i < PATH_LENGTH; ++i)
               {
@@ -375,21 +396,36 @@ int main() {
                 double t_4 = pow(t, 4);
                 double t_5 = pow(t, 5);
 
-                cout << "t2=" << t_2 << " t3=" << t_3 << " t4=" << t_4 << " t5=" << t_5 << endl;
-                cout << "a0=" << coeffs_s[0] << " a1=" << coeffs_s[1] << " a2=" << coeffs_s[2] << " a3=" << coeffs_s[3] 
-                     << " a4=" << coeffs_s[4] << " a5=" << coeffs_s[5] << endl;
+                // cout << "t2=" << t_2 << " t3=" << t_3 << " t4=" << t_4 << " t5=" << t_5 << endl;
+                // cout << "a0=" << coeffs_s[0] << " a1=" << coeffs_s[1] << " a2=" << coeffs_s[2] << " a3=" << coeffs_s[3] 
+                //      << " a4=" << coeffs_s[4] << " a5=" << coeffs_s[5] << endl;
 
 
-                double s_t = start_s[0] + start_s[1] * t + start_s[2] * t_2 + coeffs_s[3] * t_3 + coeffs_s[4] * t_4 + coeffs_s[5] * t_5;
-                // double s_t = coeffs_s[3] * t_3 + coeffs_s[4] * t_4 + coeffs_s[5] * t_5;
+                double s_t = start_s[0] + start_s[1] * t + 0.5 * start_s[2] * t_2 + coeffs_s[3] * t_3 + coeffs_s[4] * t_4 + coeffs_s[5] * t_5;
+                double s_t_dot = start_s[1] + start_s[2] * t + 3 * coeffs_s[3] * t_2 + 4 * coeffs_s[4] * t_3 + 5 * coeffs_s[5] * t_4;
+                double s_t_dot_dot = start_s[2] + 6 * coeffs_s[3] * t + 12 * coeffs_s[4] * t_2 + 20 * coeffs_s[5] * t_3;
+
                 double d_t = start_d[0] + start_d[1] * t + start_d[2] * 0.5 * t_2 + coeffs_d[3] * t_3 + coeffs_d[4] * t_4 + coeffs_d[5] * t_5;
-
-                // cout << "s[" << i << "] = " << s_t << endl;                
-                vector<double> x_y = getXY(s_t, d_t, map_waypoints_s, map_waypoints_x, map_waypoints_y);
+                double d_t_dot = start_d[1] + start_d[2] * t + 3 * coeffs_d[3] * t_2 + 4 * coeffs_d[4] * t_3 + 5 * coeffs_d[5] * t_4;
+                double d_t_dot_dot = start_d[2] + 6 * coeffs_d[3] * t + 12 * coeffs_d[4] * t_2 + 20 * coeffs_d[5] * t_3;
                 
+
+
+                cout << "s[" << i << "]: pos= " << s_t << " vel="<< s_t_dot << " acc=" << s_t_dot_dot << endl;                
+                vector<double> x_y = getXY(s_t, d_t, map_waypoints_s, map_waypoints_x, map_waypoints_y);
+
+                if(abs(s_t_dot_dot) * 50.0 > 10.0 )        
+                {
+                  cout << "[WARNING] Acceleration greater than 10ms: " << s_t_dot_dot << endl;
+                }
+
+
                 // TODO FIX THIS
                 double yaw = 0.0;
-                main_trajectory.add(x_y[0], x_y[1], s_t, d_t, yaw);
+                main_trajectory.add(x_y[0], x_y[1], 
+                                    s_t, s_t_dot, s_t_dot_dot, 
+                                    d_t, d_t_dot, d_t_dot_dot, 
+                                    yaw);
                 next_x_vals.push_back(x_y[0]);
                 next_y_vals.push_back(x_y[1]);
               }
@@ -398,6 +434,102 @@ int main() {
               cout << "All trajectories added: size=" << main_trajectory.size() 
                    << " avg speed=" << main_trajectory.averageSpeed(0.02) << "mps" 
                    << " avg acc=(" << a_a[0] << ", " << a_a[1] << ")" << endl;
+            }
+            else
+            {
+              // Get last point from trajectory
+              // From it you get position, speed, acceleration
+              int traj_size = main_trajectory.size();
+
+
+              vector<double> start_s = {main_trajectory.ss[traj_size - 1], 
+                                        main_trajectory.s_vels[traj_size - 1],
+                                        main_trajectory.s_accs[traj_size - 1]};
+
+              double predicted_speed = start_s[1];
+              cout << "* Predicted speed = " << predicted_speed << "mps" << endl;
+
+
+              double desired_speed = acc_sign > 0 ? predicted_speed * (current_acceleration + 0.01) : predicted_speed * (0.97);
+              cout << "* Desired speed = " << desired_speed << "mps" << endl;
+
+              if(desired_speed > 22.0){
+                desired_speed = 22.0;                        
+              }else{
+                current_acceleration = current_acceleration + acc_sign * 0.01;
+                if(current_acceleration < 1.0){
+                  current_acceleration = 1.0;
+                }
+              }
+
+              // Determine final point, speed and acceleration
+              vector<double> end_s = {start_s[0] + desired_speed, desired_speed, current_acceleration};
+
+              // Keep the car on the lane for now
+              vector<double> start_d = {main_trajectory.ds[traj_size - 1],
+                                        main_trajectory.d_vels[traj_size - 1],
+                                        main_trajectory.d_accs[traj_size - 1]};
+              vector<double> end_d = {main_trajectory.ds[traj_size - 1], 0, 0};
+
+              vector<double> coeffs_s = JMT(start_s, end_s, MAX_MANEUVER_DURATION);
+              vector<double> coeffs_d = JMT(start_d, end_d, MAX_MANEUVER_DURATION);
+
+              cout << "\n\n******* COMPUTING UPDATE POINTS **********" << endl;
+              cout << "Start s = " << start_s[0] << ", end s = " << end_s[0] << " acc s=" << acc_s << endl;
+              cout << "Car speed MPH=" << car_speed << " mps=" << car_speed_mps << endl;
+
+              int points_missing = PATH_LENGTH - next_x_vals.size();
+              for(int i = 0; i < points_missing; ++i)
+              {
+                double t = 0.02 * (i + 1);
+                double t_2 = pow(t, 2);
+                double t_3 = pow(t, 3);
+                double t_4 = pow(t, 4);
+                double t_5 = pow(t, 5);
+
+                // cout << "t2=" << t_2 << " t3=" << t_3 << " t4=" << t_4 << " t5=" << t_5 << endl;
+                // cout << "a0=" << coeffs_s[0] << " a1=" << coeffs_s[1] << " a2=" << coeffs_s[2] << " a3=" << coeffs_s[3] 
+                //      << " a4=" << coeffs_s[4] << " a5=" << coeffs_s[5] << endl;
+
+
+                double s_t = start_s[0] + start_s[1] * t + 0.5 * start_s[2] * t_2 + coeffs_s[3] * t_3 + coeffs_s[4] * t_4 + coeffs_s[5] * t_5;
+                double s_t_dot = start_s[1] + start_s[2] * t + 3 * coeffs_s[3] * t_2 + 4 * coeffs_s[4] * t_3 + 5 * coeffs_s[5] * t_4;
+                double s_t_dot_dot = start_s[2] + 6 * coeffs_s[3] * t + 12 * coeffs_s[4] * t_2 + 20 * coeffs_s[5] * t_3;
+
+                double d_t = start_d[0] + start_d[1] * t + start_d[2] * 0.5 * t_2 + coeffs_d[3] * t_3 + coeffs_d[4] * t_4 + coeffs_d[5] * t_5;
+                double d_t_dot = start_d[1] + start_d[2] * t + 3 * coeffs_d[3] * t_2 + 4 * coeffs_d[4] * t_3 + 5 * coeffs_d[5] * t_4;
+                double d_t_dot_dot = start_d[2] + 6 * coeffs_d[3] * t + 12 * coeffs_d[4] * t_2 + 20 * coeffs_d[5] * t_3;
+                
+
+
+                // cout << "(Updated) s[" << i << "]: pos= " << s_t << " vel="<< s_t_dot << " acc=" << s_t_dot_dot << endl;                
+                // cout << "(Updated) d[" << i << "]: pos= " << d_t << " vel="<< d_t_dot << " acc=" << d_t_dot_dot << endl;                
+                vector<double> x_y = getXY(s_t, d_t, map_waypoints_s, map_waypoints_x, map_waypoints_y);
+                               
+
+
+                // TODO FIX THIS
+                double yaw = 0.0;
+                main_trajectory.add(x_y[0], x_y[1], 
+                                    s_t, s_t_dot, s_t_dot_dot, 
+                                    d_t, d_t_dot, d_t_dot_dot, 
+                                    yaw);
+                next_x_vals.push_back(x_y[0]);
+                next_y_vals.push_back(x_y[1]);
+              }
+
+              vector<double> a_a = main_trajectory.averageAcceleration(0.02);
+              cout << "(Update) All trajectories added: size=" << main_trajectory.size() 
+                   << " avg speed=" << main_trajectory.averageSpeed(0.02) << "mps" 
+                   << " avg acc=(" << a_a[0] << ", " << a_a[1] << ")" << endl;
+
+              // for(int j = 0; j < main_trajectory.size(); ++j)
+              // {
+              //   cout << "[" << j << "]" 
+              //        << " s-acc=" << main_trajectory.s_accs[j] 
+              //        << " d-acc=" << main_trajectory.d_accs[j]
+              //        << endl;
+              // }
             }
             
 
