@@ -5,6 +5,17 @@
 
 using namespace std;
 
+
+Collision::Collision(const Vehicle& v, const bool willCollide, 
+                     const double collision_point_x, const double collision_point_y,
+                     const double timestep)
+                     :v(v), willCollide(willCollide), 
+                      collision_point_x(collision_point_x), collision_point_y(collision_point_y),
+                      collision_timestep(collision_timestep)
+{
+    
+}
+
 CollisionDetector::CollisionDetector(){}
 
 CollisionDetector::CollisionDetector(const Trajectory& trajectory)
@@ -12,9 +23,8 @@ CollisionDetector::CollisionDetector(const Trajectory& trajectory)
     this->trajectory = trajectory;    
 }
 
-vector<double> CollisionDetector::predictCollision(const Vehicle &vehicle, double timestep)
-{
-    vector<double> collision;
+Collision CollisionDetector::predictCollision(const Vehicle &vehicle, double timestep)
+{    
     for(int i = 0; i < trajectory.size(); ++i)
     {
         double ref_x = trajectory.xs[i];       
@@ -24,18 +34,12 @@ vector<double> CollisionDetector::predictCollision(const Vehicle &vehicle, doubl
         double v_predcited_y = vehicle.y + vehicle.vy * timestep;
 
         double dist = distance(ref_x, ref_y, v_predcited_x, v_predcited_y);
-        if(dist < 1)
+        if(dist < 3)
         {
-            collision.push_back(ref_x);
-            collision.push_back(ref_y);
-            collision.push_back((double)i);
-            cout << "** Predicted collision with vehicle " << vehicle.id
-                 << " dist=" << dist << " x=" << ref_x << " y=" << ref_y
-                 << " timestep=" << i << endl;
-            break;
+            return Collision(vehicle, true, ref_x, ref_y, (double) i);            
         }
     }
-    return collision;
+    return Collision(vehicle, false, 0.0, 0.0, 0.0);
 
 }
 

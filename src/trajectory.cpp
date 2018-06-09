@@ -103,3 +103,16 @@ void Trajectory::removeFirstN(int n)
      
      this->yaws.erase(this->yaws.begin(), this->yaws.begin() + n);   
 }
+
+Trajectory Trajectory::clone(int up_to_index)
+{
+    Trajectory copy = Trajectory();
+    for(int i = 0; i < this->size() && i < up_to_index; ++i)
+    {
+        copy.add(this->xs[i], this->ys[i], 
+                 this->ss[i], this->s_vels[i], this->s_accs[i],
+                 this->ds[i], this->d_vels[i], this->d_accs[i],
+                 this->yaws[i]);
+    }    
+    return copy;
+}

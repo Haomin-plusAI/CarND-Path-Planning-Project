@@ -40,5 +40,7 @@ class Vehicle
 
         // Returns a new vehicle at the next timestep
         Vehicle predictNextPosition(double t1, const vector<double> &maps_x, const vector<double> &maps_y);
+
+        double getSpeed();
 };
 #endif

@@ -32,11 +32,19 @@ class Trajectory
          * Destructor
          */ 
         virtual ~Trajectory();
+        
 
+        /**
+         * Add a new point to the trajectory
+         */ 
         void add(double x, double y, 
                  double s, double s_dot, double s_dot_dot,
                  double d, double d_dot, double d_dot_dot,
                  double yaw);
+        
+        /**
+         * @return the number of points in the trajectory
+         */ 
         int size();
         
         /**
@@ -62,6 +70,14 @@ class Trajectory
          * Removes the first n waypoints in the trajectory
          */ 
         void removeFirstN(int n);
+
+
+        /**
+         * Clones the underlying trajectory from points [0, up_to_index)
+         * @param up_to_index
+         * @return a new trajectory that contains all points up to the specified index excluded
+         */ 
+        Trajectory clone(int up_to_index);
 
         
 

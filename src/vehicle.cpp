@@ -1,4 +1,5 @@
 #include <iostream>
+#include <math.h>
 #include "vehicle.h"
 #include "helpers.h"
 
@@ -29,6 +30,11 @@ Vehicle Vehicle::predictNextPosition(double t1, const vector<double> &maps_x, co
     // vector<double> getFrenet(double x, double y, double theta, const vector<double> &maps_x, const vector<double> &maps_y)
 
     return Vehicle(this->id, newX, newY, this->vx, this->vy, frenet[0], frenet[1], t1);
+}
+
+double Vehicle::getSpeed()
+{
+    return sqrt(this->vx * this->vx + this->vy * this->vy);
 }
 
 Vehicle::~Vehicle() {}

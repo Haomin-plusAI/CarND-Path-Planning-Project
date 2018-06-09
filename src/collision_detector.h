@@ -7,6 +7,21 @@
 
 using namespace std;
 
+
+class Collision
+{
+    public:
+        const Vehicle& v;
+        const bool willCollide;
+        const double collision_point_x;
+        const double collision_point_y;
+        const double collision_timestep;
+    
+        Collision(const Vehicle& v, const bool willCollide, 
+                  const double collision_point_x, const double collision_point_y, const double timestep);
+        ~Collision();
+};
+
 class CollisionDetector
 {
     public:
@@ -30,7 +45,7 @@ class CollisionDetector
          * @param timestep the timestep unit (e.g. 0.5s, 1s, etc.) between successive points
          * 
          */ 
-        vector<double> predictCollision(const Vehicle &vehicle, double timestep);
+        Collision predictCollision(const Vehicle &vehicle, double timestep);
 };
 
 

@@ -11,7 +11,7 @@ enum LongitudinalState
 
 enum LateralState
 {
-    STAY_IN_LANE,
+    STAY_IN_LANE, 
     PREPARE_CHANGE_LANE_LEFT,
     PREPARE_CHANGE_LANE_RIGHT,
     CHANGE_LANE_LEFT,
@@ -20,8 +20,9 @@ enum LateralState
 
 class State
 {
-    LongitudinalState s_state;
-    LateralState d_state;
+    public:
+        LongitudinalState s_state;
+        LateralState d_state;
 
     
 };
