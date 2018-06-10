@@ -4,6 +4,7 @@
 #include <vector>
 #include "trajectory.h"
 #include "vehicle.h"
+#include "state_machine.h"
 
 using namespace std;
 
@@ -28,6 +29,9 @@ class PathGenerator
                                          double target_s_acc, double target_d_acc,
                                          double std_s, double std_d, 
                                          int count, int from_point_index, double time_interval);
+
+        vector<Trajectory> generatePaths(const State& state, const Vehicle& ego, 
+                                         Trajectory current_trajectory, int from_point_index, int path_count, double time_interval);
     
     private:
 

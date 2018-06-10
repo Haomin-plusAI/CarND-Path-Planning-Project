@@ -45,7 +45,7 @@ class Trajectory
         /**
          * @return the number of points in the trajectory
          */ 
-        int size();
+        int size() const;
         
         /**
          * Calculates the average squared acceleration, also known as the jerk, over all points.
@@ -53,7 +53,7 @@ class Trajectory
          * @param point_interval the interval in seconds between two consecutive points
          * @return the average longitudinal speed across all points in the trajectory
          */
-        double averageSpeed(double point_interval);
+        double averageSpeed(double point_interval) const; 
 
 
         
@@ -64,7 +64,7 @@ class Trajectory
          * @return a vector contain the average acceleration in longitudinal 
          * and lateral positions across all points
          */ 
-        vector<double> averageAcceleration(double point_time_interval);
+        vector<double> averageAcceleration(double point_time_interval) const;
         
         /**
          * Removes the first n waypoints in the trajectory
@@ -77,7 +77,7 @@ class Trajectory
          * @param up_to_index
          * @return a new trajectory that contains all points up to the specified index excluded
          */ 
-        Trajectory clone(int up_to_index);
+        Trajectory clone(int up_to_index) const;
 
         
 

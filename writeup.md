@@ -23,6 +23,15 @@ for(int i = 0; i < 50; ++i)
 
 ## Attempting to drive vehicle in lane without colliding with other vehicles
 
+This is achieved by making sure we have the appropriate cost functions with the suitable weights,
+so that it is more costly to drive faster than the vehicle in front as this would reduce the distance
+between our two vehicles and cause an earlier potential collision.
+
+However, if our ego vehicle matches the speed of the vehicle ahead and the distance between the two
+is higher than our configured threshold, then the ego vehicle will stick to the current lane and drive 
+at a speed that matches that of the vehicle ahead
+
+
 
 ## Determining whether reference vehicle will collide with another car
 

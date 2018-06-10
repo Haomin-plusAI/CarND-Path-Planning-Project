@@ -40,7 +40,18 @@ class Vehicle
 
         // Returns a new vehicle at the next timestep
         Vehicle predictNextPosition(double t1, const vector<double> &maps_x, const vector<double> &maps_y);
+        
+        /**
+         * @brief Predicts the vehicle's future position at time t (in seconds)
+         * We assume constant speed and 0 acceleration
+         * 
+         * @param t the timestep into the future in seconds
+         * @return Vehicle the vehicle at timestep t in the future
+         */
+        Vehicle predictFuturePosition(double t) const;
 
-        double getSpeed();
+        
+
+        double getSpeed() const;
 };
 #endif

@@ -28,12 +28,12 @@ void Trajectory::add(double x, double y,
     this->yaws.push_back(yaw);
 }
 
-int Trajectory::size()
+int Trajectory::size() const
 {
     return this->xs.size();
 }
 
-double Trajectory::averageSpeed(double point_interval)
+double Trajectory::averageSpeed(double point_interval) const
 {
     int pts_count = this->size();
     if(pts_count < 2)
@@ -49,7 +49,7 @@ double Trajectory::averageSpeed(double point_interval)
     return vel_sum / pts_count;    
 }
 
-vector<double> Trajectory::averageAcceleration(double point_time_interval)
+vector<double> Trajectory::averageAcceleration(double point_time_interval) const
 {
     int pts_count = this->size();
     if(pts_count < 2)
@@ -104,7 +104,7 @@ void Trajectory::removeFirstN(int n)
      this->yaws.erase(this->yaws.begin(), this->yaws.begin() + n);   
 }
 
-Trajectory Trajectory::clone(int up_to_index)
+Trajectory Trajectory::clone(int up_to_index) const
 {
     Trajectory copy = Trajectory();
     for(int i = 0; i < this->size() && i < up_to_index; ++i)

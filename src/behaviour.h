@@ -15,6 +15,8 @@ class Behaviour{
         Behaviour();
         
         vector<State> update(const Vehicle& ego, const vector<Vehicle> others, Trajectory& current_trajectory);
+        
+        void updateState(State state);
 
         ~Behaviour();
 

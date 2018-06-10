@@ -429,7 +429,7 @@ template<> struct ldlt_inplace<Lower>
       alpha += swj2/dj;
 
 
-      // Update the terms of L
+      // Update the terms of L 
       Index rs = size-j-1;
       w.tail(rs) -= wj * mat.col(j).tail(rs);
       if(gamma != 0)

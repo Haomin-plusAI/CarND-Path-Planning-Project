@@ -18,7 +18,7 @@ class Collision
         const double collision_timestep;
     
         Collision(const Vehicle& v, const bool willCollide, 
-                  const double collision_point_x, const double collision_point_y, const double timestep);
+                  const double collision_point_x, const double collision_point_y, const double collision_timestep);
         ~Collision();
 };
 

@@ -2,6 +2,7 @@
 #include <math.h>
 #include "vehicle.h"
 #include "helpers.h"
+#include "map.h"
 
 using namespace std;
 
@@ -32,7 +33,18 @@ Vehicle Vehicle::predictNextPosition(double t1, const vector<double> &maps_x, co
     return Vehicle(this->id, newX, newY, this->vx, this->vy, frenet[0], frenet[1], t1);
 }
 
-double Vehicle::getSpeed()
+
+Vehicle Vehicle::predictFuturePosition(double t) const
+{
+    double newX = this->x + this->vx * t;
+    double newY = this->y + this->vy * t;
+
+    Map &map = Map::getInstance();
+    vector<double> frenet = map.toFrenet(newX, newY, this->theta);
+    return Vehicle(this->id, newX, newY, this->vx, this->vy, frenet[0], frenet[1], t);
+}
+
+double Vehicle::getSpeed() const
 {
     return sqrt(this->vx * this->vx + this->vy * this->vy);
 }

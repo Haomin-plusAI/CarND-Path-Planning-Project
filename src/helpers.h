@@ -1,3 +1,6 @@
+#ifndef HELPERS_H
+#define HELPERS_H
+
 #include <iostream>
 #include <fstream>
 #include <math.h>
@@ -11,6 +14,23 @@
 #include "json.hpp"
 
 using namespace std;
+
+const double MAX_SPEED_METERS_PER_SECOND = 22.0;
+const double CONTROLLER_UPDATE_RATE_SECONDS = 0.02;
+
+const double VEHICLE_DISTANCE_THRESHOLD_METERS = 50;
+
+const double VEHICLE_MIN_SECURITY_DISTANCE_METERS = 10.0;
+
+const double VEHICLE_COLLISION_THRESHOLD_METERS = 5.0;
+
+// TODO It is better to make this configurable
+const double GOAL_POSITION_METERS = 6945.554;
+
+const int LANES_COUNT = 3;
+const double DEFAULT_LANE_SPACING = 4.0;
+const double DEFAULT_LANE_INSIDE_OFFSET = 1.5;
+
 
 // For converting back and forth between radians and degrees.
 constexpr double pi() { return M_PI; }
@@ -37,3 +57,5 @@ vector<double> getFrenet(double x, double y, double theta, const vector<double> 
 double milesPerHourToKmPerHour(double mph);
 
 double KmPerHourToMetersPerSecond(double kmh);
+
+#endif

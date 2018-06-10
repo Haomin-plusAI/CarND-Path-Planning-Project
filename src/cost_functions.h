@@ -1,0 +1,215 @@
+#ifndef COST_FUNCTIONS_H
+#define COST_FUNCTIONS_H
+#include <iostream>
+#include <vector>
+#include <functional>
+#include <math.h>
+#include "vehicle.h"
+#include "trajectory.h"
+#include "state_machine.h"
+#include "collision_detector.h"
+#include "helpers.h"
+
+using namespace std;
+
+typedef function<double (const Vehicle&, const vector<Vehicle>&,  const Trajectory&, const State&, const double&)> CostFunction;
+
+double speedCostFunction(const Vehicle& ego, const vector<Vehicle>& others,  const Trajectory& trajectory, 
+                         const State& state, const double& weight)
+{
+    double avg_speed = trajectory.averageSpeed(CONTROLLER_UPDATE_RATE_SECONDS);
+    double epislon = 0.001;
+    if(avg_speed > MAX_SPEED_METERS_PER_SECOND + epislon)
+    {
+        return weight;
+    } 
+
+    double diff = (MAX_SPEED_METERS_PER_SECOND - avg_speed) / MAX_SPEED_METERS_PER_SECOND;
+    return weight * (1 - exp(- abs(diff)));
+}
+
+double distanceToClosestCarAheadCostFunction(const Vehicle& ego, const vector<Vehicle>& others,  const Trajectory& trajectory, 
+                                             const State& state, const double& weight)
+{
+    // Find closest car ahead and get distance
+    if(!ego.isInLane)
+    {
+        return weight;
+    }
+
+    double min_distance = VEHICLE_DISTANCE_THRESHOLD_METERS;
+    for(const Vehicle& v : others)
+    {
+        // Other car must be ahead in the same lane
+        if(v.isInLane && v.lane == ego.lane && v.s > ego.s)
+        {
+            double dist = distance(ego.x, ego.y, v.x, v.y);
+            if(dist < min_distance)
+            {
+                min_distance = dist;
+            }
+        }
+    }
+
+    double diff = (VEHICLE_DISTANCE_THRESHOLD_METERS - min_distance);
+    return weight * (1 - exp(- abs(diff)));
+}
+
+
+double speedDifferenceWithClosestCarAheadCostFunction(const Vehicle& ego, const vector<Vehicle>& others,  const Trajectory& trajectory, 
+                                                      const State& state, const double& weight)
+{
+    // TODO need to review this
+    if(!ego.isInLane)
+    {
+        return weight;
+    }
+
+    double min_distance = VEHICLE_DISTANCE_THRESHOLD_METERS;
+    Vehicle closest_vehicle;
+    for(const Vehicle& v : others)
+    {
+        // Other car must be ahead in the same lane
+        if(v.isInLane && v.lane == ego.lane && v.s > ego.s)
+        {
+            double dist = distance(ego.x, ego.y, v.x, v.y);
+            if(dist < min_distance)
+            {
+                min_distance = dist;
+                closest_vehicle = v;
+            }
+        }
+    }
+    
+    if(min_distance >= VEHICLE_DISTANCE_THRESHOLD_METERS)
+    {   
+        // No need to penalize if vehicle ahead is far enough...
+        return 0.0;
+    }
+
+    double ego_speed = trajectory.averageSpeed(1.0);
+    double v_speed = closest_vehicle.getSpeed();
+
+    cout << "** Future ego speed=" << ego_speed << " other vehicle=" << closest_vehicle.getSpeed() << endl;
+
+    double diff = v_speed - ego_speed;
+    return weight * (1 - exp(- abs(diff)));
+}
+
+
+
+double collisionTimeCostFunction(const Vehicle& ego, const vector<Vehicle>& others,  const Trajectory& trajectory, 
+                                 const State& state, const double& weight)
+{
+    // TODO need to review this
+    if(!ego.isInLane)
+    {
+        return weight;
+    }
+
+    double min_distance = VEHICLE_DISTANCE_THRESHOLD_METERS;
+    Vehicle closest_vehicle;
+    for(const Vehicle& v : others)
+    {
+        // Other car must be ahead in the same lane
+        if(v.isInLane && v.lane == ego.lane && v.s > ego.s)
+        {
+            double dist = distance(ego.x, ego.y, v.x, v.y);
+            if(dist < min_distance)
+            {
+                min_distance = dist;
+                closest_vehicle = v;
+            }
+        }
+    }
+
+    
+    if(min_distance >= VEHICLE_DISTANCE_THRESHOLD_METERS)
+    {   
+        // No need to penalize if vehicle ahead is far enough...
+        return 0.0;
+    }
+
+    CollisionDetector detector = CollisionDetector(trajectory);
+    Collision collision = detector.predictCollision(closest_vehicle, CONTROLLER_UPDATE_RATE_SECONDS);
+    if(!collision.willCollide)
+    {
+        cout << "**** NO COLLISION " << endl;
+        // If no collision foreseen then don't penalize
+        return 0.0;
+    }
+
+    double ego_speed = trajectory.averageSpeed(1.0);
+    cout << "** Collision timestep = " << ego_speed * collision.collision_timestep << endl;
+
+    
+    // Otherwise penalize as a factor of the time to collision - the further away in time the better
+    return weight * (1 - exp(- ego_speed * collision.collision_timestep));
+}
+
+
+
+
+
+// double futureDistanceToClosestCarAheadCostFunction(const Vehicle& ego, const vector<Vehicle>& others,  const Trajectory& trajectory, 
+//                                              const State& state, const double& weight)
+// {
+//     // Find closest car ahead and get distance
+//     if(!ego.isInLane)
+//     {
+//         return weight;
+//     }
+
+//     int traj_size = trajectory.size();
+//     double timesteps_ahead = traj_size * CONTROLLER_UPDATE_RATE_SECONDS;
+//     double ego_future_s = trajectory.ss[traj_size - 1];
+//     double ego_future_x = trajectory.xs[traj_size - 1];
+//     double ego_future_y = trajectory.ys[traj_size - 1];
+
+
+//     double min_distance = VEHICLE_DISTANCE_THRESHOLD_METERS;
+//     for(const Vehicle& v : others)
+//     {
+//         Vehicle v_future = v.predictFuturePosition(timesteps_ahead);
+        
+        
+//         // Other car must be ahead in the same lane
+//         if(v.isInLane && v.lane == ego.lane && v.s > ego.s)
+//         {
+//             double dist = distance(ego.x, ego.y, v.x, v.y);
+//             if(dist < min_distance)
+//             {
+//                 min_distance = dist;
+//             }
+//         }
+//     }
+
+//     double diff = VEHICLE_DISTANCE_THRESHOLD_METERS - min_distance;
+//     return weight * (1 - exp(- abs(diff)));
+// }
+
+
+
+
+/**
+ * @brief Measures the distance to the goal at the end of our trajectory
+ * 
+ * @param ego 
+ * @param others 
+ * @param trajectory 
+ * @param state 
+ * @param weight 
+ * @return double the distance to the goal at the end of our trajectory
+ */
+double futureDistanceToGoalCostFunction(const Vehicle& ego, const vector<Vehicle>& others,  const Trajectory& trajectory, 
+                                             const State& state, const double& weight)                                             
+{
+    int traj_size = trajectory.size();
+    double diff = GOAL_POSITION_METERS - trajectory.ss[traj_size - 1];
+
+    cout << "** DISTANCE TO GOAL = " << diff << endl;
+    return weight * (1 - exp(- abs(diff / GOAL_POSITION_METERS)));
+}
+
+
+#endif

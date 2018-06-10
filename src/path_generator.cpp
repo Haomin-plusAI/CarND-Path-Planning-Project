@@ -7,6 +7,7 @@
 #include "vehicle.h"
 #include "trajectory.h"
 #include "map.h"
+#include "state_machine.h"
 
 using namespace std;
 using Eigen::MatrixXd;
@@ -17,6 +18,68 @@ using Eigen::VectorXd;
 PathGenerator::PathGenerator(const Vehicle& ego, Trajectory& current_trajectory)
 : ego(ego), current_trajectory(current_trajectory)
 {}
+
+
+vector<Trajectory> PathGenerator::generatePaths(const State& state, const Vehicle& ego, 
+                                                Trajectory current_trajectory, 
+                                                int from_point_index, 
+                                                int path_count, double time_interval)
+{
+    double target_s = 0.0;
+    double target_s_vel = 0.0;
+    double target_s_acc = 0.0;
+
+    double target_d = 0.0;
+    double target_d_vel = 0.0;
+    double target_d_acc = 0.0;
+
+    double speed_at_index = current_trajectory.s_vels[from_point_index];
+    
+    cout << "EGO D STATE = " << state.d_state << endl;
+    switch(state.s_state)
+    {
+        case LongitudinalState::MAINTAIN_COURSE:
+            target_s_vel = speed_at_index;
+            break;
+        case LongitudinalState::ACCELERATE:
+            // Increase speed by 10%
+            target_s_vel = speed_at_index < 8.0 ? 8.0 * time_interval : speed_at_index * 1.1;
+            break;
+        case LongitudinalState::DECELERATE:
+            target_s_vel = speed_at_index * 0.85;
+            break;
+        case LongitudinalState::STOP:
+            target_s_vel = speed_at_index * 0.6;
+    }
+
+    if(target_s_vel > 22.0)
+    {   
+        // 22m/s ~ 50 MPH
+        target_s_vel = 22.0;
+    }        
+    cout << "******** START S = " << current_trajectory.ss[from_point_index] << endl;
+    target_s = current_trajectory.ss[from_point_index] + target_s_vel * time_interval;
+
+    double d_at_index = current_trajectory.ds[from_point_index];
+
+    switch(state.d_state)
+    {
+        case LateralState::STAY_IN_LANE:
+            target_d = d_at_index;
+            break;
+        case LateralState::CHANGE_LANE_LEFT:
+            target_d = d_at_index - 4.0;
+            break;
+        case LateralState::CHANGE_LANE_RIGHT:
+            target_d = d_at_index + 4.0;
+            break;
+    }
+
+    return this->generatePaths(target_s, target_d, target_s_vel, 
+                               0.0, 0.0, 0.0, 0.0, 0.0, 
+                               path_count, from_point_index + 1, time_interval);
+
+}
 
 vector<Trajectory> PathGenerator::generatePaths(double target_s, double target_d, 
                                                 double target_s_speed, double target_d_speed,
@@ -49,7 +112,8 @@ vector<Trajectory> PathGenerator::generatePaths(double target_s, double target_d
     }
 
     
-
+    cout << "** LAST S = " << last_s << endl;
+    cout << "** END S = " << target_s << endl;
     vector<double> start_s = {last_s, last_s_vel, last_s_acc};
     vector<double> end_s = {target_s, target_s_speed, target_s_acc};
     
@@ -59,7 +123,7 @@ vector<Trajectory> PathGenerator::generatePaths(double target_s, double target_d
     vector<double> coeffs_s = this->JMT(start_s, end_s, time_interval);
     vector<double> coeffs_d = this->JMT(start_d, end_d, time_interval);
 
-    cout << "[P] start_s=" << start_s[0] << " end_s=" << end_s[0] << endl;
+    // cout << "[P] start_s=" << start_s[0] << " end_s=" << end_s[0] << endl;
 
     // TODO put in a separate function
     int total_points = time_interval / 0.02;
@@ -90,7 +154,7 @@ vector<Trajectory> PathGenerator::generatePaths(double target_s, double target_d
                        s_t, s_t_dot, s_t_dot_dot, 
                        d_t, d_t_dot, d_t_dot_dot, 0.0);
 
-        cout << "[" << i << "] jerk_s=" << s_jerk << " jerk_d=" << d_jerk << endl;   
+        // cout << "[" << i << "] jerk_s=" << s_jerk << " jerk_d=" << d_jerk << endl;   
         // cout << "(Updated) s[" << i << "]: pos= " << s_t << " vel="<< s_t_dot << " acc=" << s_t_dot_dot << endl;                
         // cout << "(Updated) d[" << i << "]: pos= " << d_t << " vel="<< d_t_dot << " acc=" << d_t_dot_dot << endl;                
         // cout << "Car speed MPS=" << car_speed << " mps=" << car_speed_mps << endl;
