@@ -8,6 +8,7 @@
 #include "trajectory.h"
 #include "map.h"
 #include "state_machine.h"
+#include "helpers.h"
 
 using namespace std;
 using Eigen::MatrixXd;
@@ -65,13 +66,25 @@ vector<Trajectory> PathGenerator::generatePaths(const State& state, const Vehicl
     switch(state.d_state)
     {
         case LateralState::STAY_IN_LANE:
-            target_d = d_at_index;
+            // target_d = d_at_index;
+            target_d = getLaneCenterFrenet(state.current_lane);;
+            break;
+        case LateralState::PREPARE_CHANGE_LANE_LEFT:
+            // target_d = d_at_index;
+            target_d = getLaneCenterFrenet(state.current_lane);;
+            // target_d = d_at_index - 4.0;
+            break;
+        case LateralState::PREPARE_CHANGE_LANE_RIGHT:
+            // target_d = d_at_index;
+            target_d = getLaneCenterFrenet(state.current_lane);;
+            // target_d = d_at_index + 4.0;
             break;
         case LateralState::CHANGE_LANE_LEFT:
-            target_d = d_at_index - 4.0;
+            // TODO find center of left lane
+            target_d = getLaneCenterFrenet(state.future_lane);
             break;
         case LateralState::CHANGE_LANE_RIGHT:
-            target_d = d_at_index + 4.0;
+            target_d = getLaneCenterFrenet(state.future_lane);
             break;
     }
 

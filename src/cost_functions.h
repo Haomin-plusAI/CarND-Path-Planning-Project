@@ -28,6 +28,19 @@ double speedCostFunction(const Vehicle& ego, const vector<Vehicle>& others,  con
     return weight * (1 - exp(- abs(diff)));
 }
 
+double laneChangeCostFunction(const Vehicle& ego, const vector<Vehicle>& others,  const Trajectory& trajectory, 
+                         const State& state, const double& weight)
+{
+    if(state.current_lane == state.future_lane)
+    {
+        // No penalty if staying on the same lane
+        return 0.0;
+    }
+
+    // Weight penalty if switching lane
+    return weight;        
+}
+
 double distanceToClosestCarAheadCostFunction(const Vehicle& ego, const vector<Vehicle>& others,  const Trajectory& trajectory, 
                                              const State& state, const double& weight)
 {
@@ -56,6 +69,40 @@ double distanceToClosestCarAheadCostFunction(const Vehicle& ego, const vector<Ve
 }
 
 
+double distanceToClosestCarAheadFutureLaneCostFunction(const Vehicle& ego, const vector<Vehicle>& others,  const Trajectory& trajectory, 
+                                                       const State& state, const double& weight)
+{
+    
+    if(state.current_lane == state.future_lane)
+    {
+        return distanceToClosestCarAheadCostFunction(ego, others, trajectory, state, weight);
+    }
+
+    // Find closest car ahead and get distance
+    if(!ego.isInLane)
+    {
+        return weight;
+    }
+
+    double min_distance = VEHICLE_DISTANCE_THRESHOLD_METERS;
+    for(const Vehicle& v : others)
+    {
+        // Other car must be ahead in the same lane
+        if(v.isInLane && v.lane == state.future_lane && v.s > ego.s)
+        {
+            double dist = distance(ego.x, ego.y, v.x, v.y);
+            if(dist < min_distance)
+            {
+                min_distance = dist;
+            }
+        }
+    }
+
+    double diff = (VEHICLE_DISTANCE_THRESHOLD_METERS - min_distance);
+    return weight * (1 - exp(- abs(diff)));
+}
+
+
 double speedDifferenceWithClosestCarAheadCostFunction(const Vehicle& ego, const vector<Vehicle>& others,  const Trajectory& trajectory, 
                                                       const State& state, const double& weight)
 {
@@ -70,7 +117,7 @@ double speedDifferenceWithClosestCarAheadCostFunction(const Vehicle& ego, const 
     for(const Vehicle& v : others)
     {
         // Other car must be ahead in the same lane
-        if(v.isInLane && v.lane == ego.lane && v.s > ego.s)
+        if(v.isInLane && v.lane == state.future_lane && v.s > ego.s)
         {
             double dist = distance(ego.x, ego.y, v.x, v.y);
             if(dist < min_distance)
@@ -90,11 +137,13 @@ double speedDifferenceWithClosestCarAheadCostFunction(const Vehicle& ego, const 
     double ego_speed = trajectory.averageSpeed(1.0);
     double v_speed = closest_vehicle.getSpeed();
 
-    cout << "** Future ego speed=" << ego_speed << " other vehicle=" << closest_vehicle.getSpeed() << endl;
+    cout << "** Future ego speed (future lane=" << state.future_lane << ", current lane=" << state.current_lane << ") : " << ego_speed 
+         << " other vehicle (lane=" << closest_vehicle.lane <<  ") : " << closest_vehicle.getSpeed() << endl;
 
     double diff = v_speed - ego_speed;
     return weight * (1 - exp(- abs(diff)));
 }
+
 
 
 
@@ -112,7 +161,8 @@ double collisionTimeCostFunction(const Vehicle& ego, const vector<Vehicle>& othe
     for(const Vehicle& v : others)
     {
         // Other car must be ahead in the same lane
-        if(v.isInLane && v.lane == ego.lane && v.s > ego.s)
+        if(v.isInLane && (v.lane == state.current_lane || v.lane == state.future_lane) 
+           && v.s > ego.s)
         {
             double dist = distance(ego.x, ego.y, v.x, v.y);
             if(dist < min_distance)
@@ -140,11 +190,11 @@ double collisionTimeCostFunction(const Vehicle& ego, const vector<Vehicle>& othe
     }
 
     double ego_speed = trajectory.averageSpeed(1.0);
-    cout << "** Collision timestep = " << ego_speed * collision.collision_timestep << endl;
+    cout << "** Collision with vehicle at timestep = " << collision.collision_timestep << endl;
 
     
     // Otherwise penalize as a factor of the time to collision - the further away in time the better
-    return weight * (1 - exp(- ego_speed * collision.collision_timestep));
+    return weight * (1 - exp(-collision.collision_timestep));
 }
 
 

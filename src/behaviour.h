@@ -16,12 +16,14 @@ class Behaviour{
         
         vector<State> update(const Vehicle& ego, const vector<Vehicle> others, Trajectory& current_trajectory);
         
-        void updateState(State state);
+        void updateState(State state );
 
         ~Behaviour();
 
     private:
-        State state;
+        StateMachine state_machine;
+        int current_timestep;        
+        int lock_timestep;        
 
 };
 

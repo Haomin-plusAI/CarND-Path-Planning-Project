@@ -18,7 +18,7 @@ using namespace std;
 const double MAX_SPEED_METERS_PER_SECOND = 22.0;
 const double CONTROLLER_UPDATE_RATE_SECONDS = 0.02;
 
-const double VEHICLE_DISTANCE_THRESHOLD_METERS = 50;
+const double VEHICLE_DISTANCE_THRESHOLD_METERS = 25;
 
 const double VEHICLE_MIN_SECURITY_DISTANCE_METERS = 10.0;
 
@@ -46,6 +46,23 @@ double getTheta(double vx, double vy);
 int calculateLane(double d, double lane_spacing, double lane_inside_offset);
 
 bool isWithinLane(double d, double lane_spacing, double lane_inside_offset);
+
+/**
+ * @brief Checks whether the lane id is a valid one
+ * 
+ * @param lane the lane id
+ * @return true if the id is within our range of admissible lanes
+ * @return false if the id is outside of our admissible lane range
+ */
+bool isLaneValid(int lane);
+
+/**
+ * @brief Get the appropriate lane center value (d_center) in Frenet coordinates
+ * 
+ * @param lane the lane id
+ * @return double the lane center in frenet coordinates
+ */
+double getLaneCenterFrenet(int lane);
 
 double distance(double x1, double y1, double x2, double y2);
 

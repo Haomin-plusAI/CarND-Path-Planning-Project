@@ -57,6 +57,16 @@ bool isWithinLane(double d, double lane_spacing, double lane_inside_offset)
 	return target_lane == calibrated_lane;
 }
 
+bool isLaneValid(int lane)
+{
+	return lane >= 0 && lane < LANES_COUNT;
+}
+
+double getLaneCenterFrenet(int lane)
+{
+	return 2.1 + 4.0 * lane;
+}
+
 int ClosestWaypoint(double x, double y, const vector<double> &maps_x, const vector<double> &maps_y)
 {
 

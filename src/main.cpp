@@ -18,6 +18,7 @@
 #include "path_generator.h"
 #include "cost_functions.h"
 #include "map.h"
+#include <stdlib.h>  
 
 using namespace std;
 using Eigen::MatrixXd;
@@ -284,37 +285,25 @@ int main() {
 
           
             double car_speed_mps = KmPerHourToMetersPerSecond(milesPerHourToKmPerHour(car_speed));
-            Vehicle ego = Vehicle(-1, car_x, car_y, cos(car_yaw_rad), sin(car_yaw_rad), car_s, car_d, 0.0);
-            behaviour.update(ego, vehicles, main_trajectory);                    
-            double final_speed = car_speed_mps < 2.78 ? 10 : car_speed_mps * 1.1;
+            Vehicle ego = Vehicle(-1, car_x, car_y, cos(car_yaw_rad), sin(car_yaw_rad), car_s, car_d, 0.0);            
+            
+            // double acc_s = 0.0;
+            // if(previous_path_x.size() > 0)
+            // {
+            //   cout << "Previous path length = " << previous_path_x.size() << endl;
+            //   double last_point_x = previous_path_x[0];
+            //   double last_point_y = previous_path_y[0];
+            //   double previous_theta = atan2(car_y - last_point_y, car_x - last_point_x);
+            //   // double previous_theta = atan2(last_point_y - car_y, last_point_x - car_x );
 
-            if(final_speed > 22.0)
-            {
-              final_speed = 22.0;
-            }
+            //   vector<double> previous_s_d = getFrenet(last_point_x, last_point_y, previous_theta, map_waypoints_x, map_waypoints_y);
+            //   acc_s = car_s - previous_s_d[0];
+            //   cout << "** S acceleration = " << acc_s << endl;
 
-            double acc_s = 0.0;
-            if(previous_path_x.size() > 0)
-            {
-              cout << "Previous path length = " << previous_path_x.size() << endl;
-              double last_point_x = previous_path_x[0];
-              double last_point_y = previous_path_y[0];
-              double previous_theta = atan2(car_y - last_point_y, car_x - last_point_x);
-              // double previous_theta = atan2(last_point_y - car_y, last_point_x - car_x );
+            //   acc_s = acc_s <= 0 ? 0 : acc_s * 50;
+            // }
 
-              vector<double> previous_s_d = getFrenet(last_point_x, last_point_y, previous_theta, map_waypoints_x, map_waypoints_y);
-              acc_s = car_s - previous_s_d[0];
-              cout << "** S acceleration = " << acc_s << endl;
-
-              acc_s = acc_s <= 0 ? 0 : acc_s * 50;
-            }
-
-            double final_acc = 4;
-            final_acc = acc_s;
-            if(final_acc > 10){
-              final_acc = 9.0;
-            }
-            cout << "Final speed = " << final_speed << endl;
+            
             
             Trajectory chosen_trajectory;
             State chosen_state;
@@ -417,15 +406,31 @@ int main() {
                     
                     CostFunction collision_time_cost_fn = collisionTimeCostFunction;
                     double collision_time_cost = collision_time_cost_fn(ego, vehicles, path, state, 100.0);
+                    
+                    CostFunction dist_car_future_lane_cost_fn = distanceToClosestCarAheadFutureLaneCostFunction;
+                    double dist_car_future_lane_cost = dist_car_future_lane_cost_fn(ego, vehicles, path, state, 100.0);
 
                     double final_cost = cost_speed + cost_dist_cars 
                                         + future_dist_to_goal_cost + speed_diff_to_car_ahead_cost
-                                        + collision_time_cost;
+                                        + collision_time_cost + dist_car_future_lane_cost;
                     
+                    // if(ego.lane != state.current_lane)
+                    // {
+                    //   cout << "*********************************************************************************" << endl;
+                    //   cout << "*********************************************************************************" << endl;
+                    //   cout << "*********************************************************************************" << endl;
+                    //   cout << "*********************************************************************************" << endl;
+                    //   cout << "*********************************************************************************" << endl;
+                    //   exit(1);
+                    // }
+
                     cout << "** Generating paths for state: (" << state.s_state
-                      << "," << state.d_state << ")\n" 
+                      << "," << state.d_state << ")" 
+                      << ", (current-lane=" << state.current_lane << ",future-lane=" << state.future_lane << ")\n" 
+                      << "EGO LANE = " << ego.lane << "\n"
                       << "\t---> cost speed = " <<  cost_speed << "\n"
-                      << "\t---> cost dist cars = " <<  cost_dist_cars << "\n"
+                      << "\t---> cost dist car same lane = " <<  cost_dist_cars << "\n"
+                      << "\t---> cost dist car future lane = " <<  dist_car_future_lane_cost << "\n"
                       << "\t---> cost future dist goal = " <<  future_dist_to_goal_cost << "\n"
                       << "\t---> cost speed diff car ahead = " <<  speed_diff_to_car_ahead_cost << "\n"
                       << "\t---> cost collision ahead = " <<  collision_time_cost << "\n"
@@ -444,64 +449,8 @@ int main() {
                    << "," << chosen_state.d_state << ")" << endl; 
 
 
-              main_trajectory = chosen_trajectory;
-              
-              // double time_interval = 1.0;
-              // vector<double> start_s = {main_trajectory.ss[from_point], 
-              //                           main_trajectory.s_vels[from_point],
-              //                           main_trajectory.s_accs[from_point]};
-
-              // double predicted_speed = start_s[1];
-              // cout << "* Predicted speed " << "at point " << from_point 
-              //      << " = " << predicted_speed << "mps" << endl;
-
-
-              // double desired_speed = acc_sign > 0 ? predicted_speed * (current_acceleration + 0.01) : predicted_speed * (0.97);
-              // cout << "* Desired speed = " << desired_speed << "mps" << endl;
-
-              // if(desired_speed > 21.0){
-              //   desired_speed = 21.0;                        
-              // }else{
-              //   current_acceleration = current_acceleration + acc_sign * 0.01;
-              //   if(current_acceleration < 1.0){
-              //     current_acceleration = 1.0;
-              //   }                            
-              // }
-
-              // // Basic kinematic formula that includes acceleration
-              // double target_s = start_s[0] + desired_speed * time_interval + 0.5 * time_interval * time_interval;
-              // double target_s_vel = desired_speed;
-              // double target_s_acc = 0.0;
-              
-              // cout << "target_s=" << target_s 
-              //      << "m target_s_speed=" << target_s_vel 
-              //      << "m/s target_s_acc=" << target_s_acc << "m/s^2" << endl;
-
-              // // Determine final point, speed and acceleration
-              // // vector<double> end_s = {start_s[0] + desired_speed, desired_speed, current_acceleration};
-
-              // // Keep the car on the lane for now
-              // vector<double> start_d = {main_trajectory.ds[from_point],
-              //                           main_trajectory.d_vels[from_point],
-              //                           main_trajectory.d_accs[from_point]};
-              
-              // double target_d = start_d[0];
-              // vector<double> end_d = {main_trajectory.ds[traj_size - 1], 0, 0};
-
-              // vector<double> coeffs_s = JMT(start_s, end_s, MAX_MANEUVER_DURATION);
-              // vector<double> coeffs_d = JMT(start_d, end_d, MAX_MANEUVER_DURATION);
-
-              // cout << "\n\n******* COMPUTING UPDATE POINTS **********" << endl;
-              // cout << "Start s = " << start_s[0] << ", end s = " << end_s[0] << " acc s=" << acc_s << endl;
-              // cout << "Car speed MPH=" << car_speed << " mps=" << car_speed_mps << endl;
-
-              
-              // PathGenerator path_gen = PathGenerator(ego, main_trajectory);
-              
-
-              // vector<Trajectory> gen_trajs = path_gen.generatePaths(target_s, target_d, target_s_vel, 0.0, target_s_acc, 0.0, 0.0, 0.0, 25, 26, 1.0);
-              // Trajectory first_traj = gen_trajs[0];
-              
+              main_trajectory = chosen_trajectory;              
+                          
               for(int i = 0; i < chosen_trajectory.xs.size(); ++i)
               {
                 next_x_vals.push_back(chosen_trajectory.xs[i]);
@@ -509,6 +458,7 @@ int main() {
               }
 
               main_trajectory = chosen_trajectory;
+              behaviour.updateState(chosen_state);
 
               vector<double> a_a = main_trajectory.averageAcceleration(0.02);
               cout << "(Update) All trajectories added: size=" << main_trajectory.size() 
