@@ -9,6 +9,7 @@
 #include "collision_detector.h"
 
 
+
 using namespace std;
 
 
@@ -33,9 +34,11 @@ vector<State> Behaviour::update(const Vehicle& ego, const vector<Vehicle> others
 
     auto next_states = this->state_machine.nextPossibleStates();    
 
-    vector<State> reachable_next_states;
+    vector<State> reachable_next_states;    
     for(const State& next_state : next_states)
     {
+        
+        
         if(!isLaneValid(next_state.current_lane) || !isLaneValid(next_state.future_lane))
         {
             continue;
@@ -162,11 +165,11 @@ void Behaviour::updateState(State new_state)
     {
         this->lock_timestep = this->current_timestep + 50;
         // tlock = 50;
-          cout << "*********************************************************************************" << endl;
-        cout << "*********************************************************************************" << endl;
-        cout << "*********************************************************************************" << endl;
-        cout << "*********************************************************************************" << endl;
-        cout << "*********************************************************************************" << endl;
+        //   cout << "*********************************************************************************" << endl;
+        // cout << "*********************************************************************************" << endl;
+        // cout << "*********************************************************************************" << endl;
+        // cout << "*********************************************************************************" << endl;
+        // cout << "*********************************************************************************" << endl;
         cout << "*** FREEZING state updates for " << this->lock_timestep << "timesteps";
     }
     

@@ -51,17 +51,17 @@ Collision CollisionDetector::predictCollision(const Vehicle &vehicle, double tim
             continue;
         } 
 
-        if(ego_lane != v_lane)
-        {
-            continue;
-        }
+        // if(ego_lane != v_lane)
+        // {
+        //     continue;
+        // }
 
 
         double dist = distance(ref_x, ref_y, v_predcited_x, v_predcited_y);                
 
         if(dist < VEHICLE_COLLISION_THRESHOLD_METERS)
         {         
-            cout << ">>>>** Collision timestep = " << i << endl;
+            cout << ">>>>>>>>>>>>** Collision timestep = " << i << endl;
             return Collision(vehicle, true, ref_x, ref_y, (double) i);            
         }
     }

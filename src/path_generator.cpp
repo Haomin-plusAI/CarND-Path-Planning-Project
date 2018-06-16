@@ -36,7 +36,7 @@ vector<Trajectory> PathGenerator::generatePaths(const State& state, const Vehicl
 
     double speed_at_index = current_trajectory.s_vels[from_point_index];
     
-    cout << "EGO D STATE = " << state.d_state << endl;
+    // cout << "EGO D STATE = " << state.d_state << endl;
     switch(state.s_state)
     {
         case LongitudinalState::MAINTAIN_COURSE:
@@ -58,7 +58,7 @@ vector<Trajectory> PathGenerator::generatePaths(const State& state, const Vehicl
         // 22m/s ~ 50 MPH
         target_s_vel = 22.0;
     }        
-    cout << "******** START S = " << current_trajectory.ss[from_point_index] << endl;
+    // cout << "******** START S = " << current_trajectory.ss[from_point_index] << endl;
     target_s = current_trajectory.ss[from_point_index] + target_s_vel * time_interval;
 
     double d_at_index = current_trajectory.ds[from_point_index];
@@ -125,8 +125,8 @@ vector<Trajectory> PathGenerator::generatePaths(double target_s, double target_d
     }
 
     
-    cout << "** LAST S = " << last_s << endl;
-    cout << "** END S = " << target_s << endl;
+    // cout << "** LAST S = " << last_s << endl;
+    // cout << "** END S = " << target_s << endl;
     vector<double> start_s = {last_s, last_s_vel, last_s_acc};
     vector<double> end_s = {target_s, target_s_speed, target_s_acc};
     

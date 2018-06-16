@@ -39,7 +39,7 @@ const State& StateMachine::getCurrentState() const
 
 void StateMachine::updateState(State next_state, int keep_until_timestep)
 {
-    cout << "**** UPDATED STATE MACHINE ***" << endl;
+    // cout << "**** UPDATED STATE MACHINE ***" << endl;
     this->current_state = next_state;
     ++this->current_timestep;
     this->timestep_lock = keep_until_timestep;
@@ -48,18 +48,21 @@ void StateMachine::updateState(State next_state, int keep_until_timestep)
 vector<State> StateMachine::nextPossibleStates()
 {   
 
-    cout << "* STATE MACHINE - current state: (" << this->current_state.s_state
-         << "," << this->current_state.d_state << ")" << endl; 
+    // cout << "* STATE MACHINE - current state: (" << this->current_state.s_state
+    //      << "," << this->current_state.d_state << ")" << endl; 
 
-    cout << "*** STATE MACHINE TIMESTEPS: " 
-             << this->current_timestep << " < " << this->timestep_lock
-             << endl;
+    // cout << "*** STATE MACHINE TIMESTEPS: " 
+    //          << this->current_timestep << " < " << this->timestep_lock
+    //          << endl;
+
+    // TODO if the LONGITUDINAL state is stop return STOP and stay in LANE
+    // THIS IS VERY IMPORTANT!!
 
     if(this->current_timestep < this->timestep_lock)
     {
-        cout << "*** UPDATES FROZEN RETURNING CURRENT STATE: " 
-             << this->current_timestep << " < " << this->timestep_lock
-             << endl;
+        // cout << "*** UPDATES FROZEN RETURNING CURRENT STATE: " 
+        //      << this->current_timestep << " < " << this->timestep_lock
+            //  << endl;
         // If we have a timestep lock then simply return the current state
         return {this->current_state};
     }

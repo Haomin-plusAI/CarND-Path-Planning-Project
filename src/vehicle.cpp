@@ -49,6 +49,45 @@ double Vehicle::getSpeed() const
     return sqrt(this->vx * this->vx + this->vy * this->vy);
 }
 
+
+vector<Vehicle> Vehicle::ahead(const vector<Vehicle>& others, int lane) const
+{
+    vector<Vehicle> v_ahead;
+    for(const Vehicle& v: others)
+    {
+        if(v.lane != lane)
+        {
+            continue;
+        }
+        if(v.s >= this->s)
+        {
+            v_ahead.push_back(v);
+        }
+
+    }
+
+    return v_ahead;
+}
+
+vector<Vehicle> Vehicle::behind(const vector<Vehicle>& others, int lane) const
+{
+    vector<Vehicle> v_behind;
+    for(const Vehicle& v: others)
+    {
+        if(v.lane != lane)
+        {
+            continue;
+        }
+        if(v.s < this->s)
+        {
+            v_behind.push_back(v);
+        }
+
+    }
+
+    return v_behind;
+}
+
 Vehicle::~Vehicle() {}
 
 

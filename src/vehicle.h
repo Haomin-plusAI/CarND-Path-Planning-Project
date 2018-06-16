@@ -50,6 +50,24 @@ class Vehicle
          */
         Vehicle predictFuturePosition(double t) const;
 
+        /**
+         * @brief Checks which vehicles are ahead of the current vehicle on the given lane
+         * 
+         * @param others the other vehicles which may be ahead
+         * @param lane the lane to check against
+         * @return vector<Vehicle>  the vehicles ahead of the current vehicle
+         */
+        vector<Vehicle> ahead(const vector<Vehicle>& others, int lane) const;
+
+        /**
+         * @brief Checks which vehicles are behind of the current vehicle on the given lane
+         * 
+         * @param others the other vehicles which may be behind
+         * @param lane the lane to check against
+         * @return vector<Vehicle>  the vehicles behind of the current vehicle
+         */
+        vector<Vehicle> behind(const vector<Vehicle>& others, int lane) const;
+
         
 
         double getSpeed() const;

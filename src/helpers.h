@@ -25,7 +25,7 @@ const double VEHICLE_MIN_SECURITY_DISTANCE_METERS = 10.0;
 const double VEHICLE_COLLISION_THRESHOLD_METERS = 5.0;
 
 // TODO It is better to make this configurable
-const double GOAL_POSITION_METERS = 6945.554;
+const double GOAL_POSITION_METERS = 10000;
 
 const int LANES_COUNT = 3;
 const double DEFAULT_LANE_SPACING = 4.0;
