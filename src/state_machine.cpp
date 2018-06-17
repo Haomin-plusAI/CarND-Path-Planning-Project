@@ -113,7 +113,7 @@ vector<State> StateMachine::nextPossibleStates()
             future_states.push_back(State(LongitudinalState::MAINTAIN_COURSE, 
                                           LateralState::CHANGE_LANE_LEFT,
                                           this->current_state.current_lane - 1,
-                                          this->current_state.current_lane - 1));
+                                          this->current_state.current_lane - 1));            
             future_states.push_back(State(LongitudinalState::MAINTAIN_COURSE, 
                                           LateralState::STAY_IN_LANE,
                                           this->current_state.current_lane,
@@ -124,7 +124,7 @@ vector<State> StateMachine::nextPossibleStates()
             future_states.push_back(State(LongitudinalState::MAINTAIN_COURSE, 
                                           LateralState::CHANGE_LANE_RIGHT,
                                           this->current_state.current_lane + 1,
-                                          this->current_state.current_lane + 1));
+                                          this->current_state.current_lane + 1));            
             future_states.push_back(State(LongitudinalState::MAINTAIN_COURSE, 
                                           LateralState::STAY_IN_LANE,
                                           this->current_state.current_lane,

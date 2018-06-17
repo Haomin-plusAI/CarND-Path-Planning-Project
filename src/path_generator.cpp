@@ -59,10 +59,10 @@ vector<Trajectory> PathGenerator::generatePaths(const State& state, const Vehicl
             target_s_vel = speed_at_index * 0.6;
     }
 
-    if(target_s_vel > 21.5)
+    if(target_s_vel > 22)
     {   
         // 22m/s ~ 50 MPH
-        target_s_vel = 21.5;
+        target_s_vel = 22;
     }        
     cout << "**** DESIRED SPEED =" << target_s_vel << endl;
     
@@ -88,17 +88,22 @@ vector<Trajectory> PathGenerator::generatePaths(const State& state, const Vehicl
             // TODO find center of left lane
             target_d = getLaneCenterFrenet(state.future_lane);            
             std_d = 1.0;
-            // s_offset = 2.0;
+            // s_offset = 5.0;
             break;
         case LateralState::CHANGE_LANE_RIGHT:
             target_d = getLaneCenterFrenet(state.future_lane);            
             std_d = 1.0;
-            // s_offset = 2.0;
+            // s_offset = 5.0;
             break;
     }
 
+    if(current_trajectory.size() < 5)
+    {
+        target_d = current_trajectory.ds[0];
+    }
+
     // cout << "******** START S = " << current_trajectory.ss[from_point_index] << endl;
-    target_s = (current_trajectory.ss[from_point_index] + target_s_vel * time_interval) - s_offset;
+    target_s = (current_trajectory.ss[from_point_index] + target_s_vel * time_interval);
 
     return this->generatePaths(target_s, target_d, target_s_vel, 
                                0.0, 0.0, 0.0, std_s, std_d, 
@@ -196,6 +201,7 @@ void PathGenerator::appendPath(vector<double> start_s, vector<double> end_s,
     vector<double> coeffs_d = this->JMT(start_d, end_d, time_interval);
 
     int total_points = time_interval / CONTROLLER_UPDATE_RATE_SECONDS;
+    cout << "^^^^^^ TOTAL POINTS " << total_points << endl;
     int points_remaining = total_points - trajectory.size();
     Map& map = Map::getInstance();
     

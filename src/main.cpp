@@ -206,6 +206,7 @@ int main() {
               // Make sure our main trajectory mirrors points in the previous_path
               main_trajectory.removeFirstN(main_trajectory.size() - prev_path_size);
               vector<double> a_a = main_trajectory.averageAcceleration(0.02);
+              cout << "*******************************************************" << endl;
               cout << "Trajectories updated: size=" << main_trajectory.size() 
                    << " avg speed=" << main_trajectory.averageSpeed(0.02) << "mps" 
                    << " avg acc=(" << a_a[0] << ", " << a_a[1] << ")" << endl;
@@ -368,17 +369,12 @@ int main() {
             {
 
               cout << "\n\n******* UPDATING " << endl;
-              
-
-
-              // Get last point from trajectory
-              // From it you get position, speed, acceleration
-              int traj_size = main_trajectory.size();
-
-
+              cout << "trajectory size = " << main_trajectory.size() << endl;
+                      
               PathGenerator path_gen = PathGenerator(ego, main_trajectory);
               vector<State> next_states = behaviour.update(ego, vehicles, main_trajectory);
-              int from_point = 25;              
+              // int from_point = 45;              
+              int from_point = 35;              
               
               PathValidator path_validator;
               for(const State& state : next_states)
@@ -515,9 +511,9 @@ int main() {
               behaviour.updateState(chosen_state);
 
               vector<double> a_a = main_trajectory.averageAcceleration(0.02);
-              cout << "(Update) All trajectories added: size=" << main_trajectory.size() 
-                   << " avg speed=" << main_trajectory.averageSpeed(0.02) << "mps" 
-                   << " avg acc=(" << a_a[0] << ", " << a_a[1] << ")" << endl;
+              // cout << "(Update) All trajectories added: size=" << main_trajectory.size() 
+              //      << " avg speed=" << main_trajectory.averageSpeed(0.02) << "mps" 
+              //      << " avg acc=(" << a_a[0] << ", " << a_a[1] << ")" << endl;
 
               // for(int j = 0; j < main_trajectory.size(); ++j)
               // {
@@ -527,8 +523,18 @@ int main() {
               //        << endl;
               // }
             }
+            // else{
+            //   cout << "@@@@@@@@ NOT BOTHERING @@@@@@ " << endl;
+            //   // Don't bother recomputing at this stage
+            //   chosen_trajectory = main_trajectory;
+            //   for(int i = 0; i < chosen_trajectory.xs.size(); ++i)
+            //   {
+            //     next_x_vals.push_back(chosen_trajectory.xs[i]);
+            //     next_y_vals.push_back(chosen_trajectory.ys[i]);
+            //   }
+            // }
             
-            cout << "Size of path for controller = " << next_x_vals.size() << endl;
+            cout << "****** Size of path for controller = " << next_x_vals.size() << endl;
             cout << "******** S VALUE = " << car_s << endl;
             
 

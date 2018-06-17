@@ -28,29 +28,41 @@ PathValidationStatus PathValidator::validate(const Vehicle& ego,
 
     double total_s_acc = 0.0;
     double total_d_acc = 0.0;
+    double total_s_vel = 0.0;
+    double total_d_vel = 0.0;
     double total_s_jerk = 0.0;
     double total_d_jerk = 0.0;
     double prev_s_vel = 0.0;
     double prev_d_vel = 0.0;
     
-    // for(int i = from_point; i < trajectory.xs.size(); ++i)
-    // {
-    //     double last_s = trajectory.ss[i - 1];
-    //     double last_d = trajectory.ds[i - 1];
+    for(int i = from_point; i < trajectory.xs.size(); ++i)
+    {
+        double last_s = trajectory.ss[i - 1];
+        double last_d = trajectory.ds[i - 1];
         
-    //     double cur_s = trajectory.ss[i];
-    //     double cur_d = trajectory.ds[i];
+        double cur_s = trajectory.ss[i];
+        double cur_d = trajectory.ds[i];
 
-    //     double s_vel = cur_s - last_s;
-    //     double d_vel = cur_d - last_d;
+        double s_vel = cur_s - last_s;
+        double d_vel = cur_d - last_d;
 
-    //     double s_acc = i == from_point ? 0.0 : s_vel;
-    //     double d_acc = i == from_point ? 0.0 : d_vel;
+        total_s_vel += s_vel;
+        total_d_vel += d_vel;
+        
+        double s_acc = i < from_point + 1 ? 0.0 : s_vel - prev_s_vel;
+        double d_acc = i < from_point + 1 ? 0.0 : d_vel - prev_d_vel;
 
-    //     // TODO Check turning angle should be less than a specified value
-    // }
-    // cout << "*** FROM POINT = " << from_point << endl;
-    // cout << "*** SIZE = " << trajectory.size() << endl;
+        total_s_acc += abs(s_acc);
+        total_d_acc += abs(d_acc);
+
+        prev_s_vel = s_vel;
+        prev_d_vel = d_vel;
+
+        // TODO Check turning angle should be less than a specified value
+    }
+
+    cout << "------------- TOTAL S_ACC = " << total_s_acc << endl;
+    cout << "------------- TOTAL D_ACC = " << total_d_acc << endl;
 
     double total_acc = 0;
     double prev_velocity = 0.0;
@@ -68,7 +80,7 @@ PathValidationStatus PathValidator::validate(const Vehicle& ego,
         // cout << "**** DISTANCE  = " << vel << endl;           
         // cout << "**** VELOCITY  = " << vel / CONTROLLER_UPDATE_RATE_SECONDS << endl;           
         
-        if(vel / CONTROLLER_UPDATE_RATE_SECONDS > 22)
+        if(vel / CONTROLLER_UPDATE_RATE_SECONDS > 22.2)
         {
             cout << "**** MAXIMUM VELOCITY ABOVE THRESHOLD = " << vel / CONTROLLER_UPDATE_RATE_SECONDS << endl;
             return PathValidationStatus::VELOCITY_ABOVE_THRESHOLD;

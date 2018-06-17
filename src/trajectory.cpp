@@ -121,6 +121,8 @@ Trajectory Trajectory::clone(int up_to_index) const
                  this->ds[i], this->d_vels[i], this->d_accs[i], this->d_jks[i],
                  this->yaws[i]);
     }    
+    
+    cout << "&&&&&&& CLONING TRAJECTORY OF SIZE " << copy.size() << endl;
     return copy;
 }
 
