@@ -14,11 +14,14 @@ class Trajectory
         
         vector<double> ss;        
         vector<double> s_vels;
-        vector<double> s_accs;
-        
+        vector<double> s_accs;        
+        vector<double> s_jks;
+                        
         vector<double> ds;
         vector<double> d_vels;
         vector<double> d_accs;
+        vector<double> d_jks;
+
         
         vector<double> yaws;
 
@@ -38,8 +41,8 @@ class Trajectory
          * Add a new point to the trajectory
          */ 
         void add(double x, double y, 
-                 double s, double s_dot, double s_dot_dot,
-                 double d, double d_dot, double d_dot_dot,
+                 double s, double s_dot, double s_dot_dot, double s_dot_dot_dot,
+                 double d, double d_dot, double d_dot_dot, double d_dot_dot_dot,
                  double yaw);
         
         /**
@@ -55,6 +58,8 @@ class Trajectory
          */
         double averageSpeed(double point_interval) const; 
 
+
+        // vector<double> 
 
         
         /**
@@ -78,6 +83,26 @@ class Trajectory
          * @return a new trajectory that contains all points up to the specified index excluded
          */ 
         Trajectory clone(int up_to_index) const;
+
+        
+        /**
+         * @brief Attempts to smoother the trajectory using a polynomial fit
+         * 
+         */
+        void smoothen(int from_index);
+
+        /**
+         * @brief Checks whether the path is feasible
+         * 
+         * @return true 
+         * @return false 
+         */
+        bool feasible() const; 
+
+
+        
+
+            
 
         
 

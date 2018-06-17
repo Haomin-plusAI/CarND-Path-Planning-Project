@@ -1,5 +1,7 @@
 #include <iostream>
 #include <vector>
+#include <chrono>
+#include <random>
 #include "Eigen-3.3/Eigen/Core"
 #include "Eigen-3.3/Eigen/Dense"
 #include "Eigen-3.3/Eigen/QR"
@@ -34,7 +36,11 @@ vector<Trajectory> PathGenerator::generatePaths(const State& state, const Vehicl
     double target_d_vel = 0.0;
     double target_d_acc = 0.0;
 
+    double std_s = 5.0;
+    double std_d = 0.0;
+
     double speed_at_index = current_trajectory.s_vels[from_point_index];
+    double acc_at_index = current_trajectory.s_accs[from_point_index];
     
     // cout << "EGO D STATE = " << state.d_state << endl;
     switch(state.s_state)
@@ -44,7 +50,7 @@ vector<Trajectory> PathGenerator::generatePaths(const State& state, const Vehicl
             break;
         case LongitudinalState::ACCELERATE:
             // Increase speed by 10%
-            target_s_vel = speed_at_index < 8.0 ? 8.0 * time_interval : speed_at_index * 1.1;
+            target_s_vel = speed_at_index == 0 ? 3.0 : speed_at_index * (1.1);
             break;
         case LongitudinalState::DECELERATE:
             target_s_vel = speed_at_index * 0.85;
@@ -53,16 +59,15 @@ vector<Trajectory> PathGenerator::generatePaths(const State& state, const Vehicl
             target_s_vel = speed_at_index * 0.6;
     }
 
-    if(target_s_vel > 22.0)
+    if(target_s_vel > 21.5)
     {   
         // 22m/s ~ 50 MPH
-        target_s_vel = 22.0;
+        target_s_vel = 21.5;
     }        
-    // cout << "******** START S = " << current_trajectory.ss[from_point_index] << endl;
-    target_s = current_trajectory.ss[from_point_index] + target_s_vel * time_interval;
-
+    cout << "**** DESIRED SPEED =" << target_s_vel << endl;
+    
+    double s_offset = 0.0;
     double d_at_index = current_trajectory.ds[from_point_index];
-
     switch(state.d_state)
     {
         case LateralState::STAY_IN_LANE:
@@ -81,15 +86,22 @@ vector<Trajectory> PathGenerator::generatePaths(const State& state, const Vehicl
             break;
         case LateralState::CHANGE_LANE_LEFT:
             // TODO find center of left lane
-            target_d = getLaneCenterFrenet(state.future_lane);
+            target_d = getLaneCenterFrenet(state.future_lane);            
+            std_d = 1.0;
+            // s_offset = 2.0;
             break;
         case LateralState::CHANGE_LANE_RIGHT:
-            target_d = getLaneCenterFrenet(state.future_lane);
+            target_d = getLaneCenterFrenet(state.future_lane);            
+            std_d = 1.0;
+            // s_offset = 2.0;
             break;
     }
 
+    // cout << "******** START S = " << current_trajectory.ss[from_point_index] << endl;
+    target_s = (current_trajectory.ss[from_point_index] + target_s_vel * time_interval) - s_offset;
+
     return this->generatePaths(target_s, target_d, target_s_vel, 
-                               0.0, 0.0, 0.0, 0.0, 0.0, 
+                               0.0, 0.0, 0.0, std_s, std_d, 
                                path_count, from_point_index + 1, time_interval);
 
 }
@@ -136,16 +148,66 @@ vector<Trajectory> PathGenerator::generatePaths(double target_s, double target_d
     vector<double> coeffs_s = this->JMT(start_s, end_s, time_interval);
     vector<double> coeffs_d = this->JMT(start_d, end_d, time_interval);
 
-    // cout << "[P] start_s=" << start_s[0] << " end_s=" << end_s[0] << endl;
+    this->appendPath(start_s, end_s, start_d, end_d, first_traj, time_interval);
+    trajs.push_back(first_traj);
 
-    // TODO put in a separate function
-    int total_points = time_interval / 0.02;
-    int points_remaining = total_points - first_traj.size();
-    Map& map = Map::getInstance();
-    for(int i = 0; i < points_remaining; ++i)
+
+    // first_traj.feasible();
+    
+
+    // trajs.push_back(first_traj);
+
+
+    // Create a normal distribution and a time based seed
+    unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
+    std::default_random_engine generator(seed);
+    std::normal_distribution<double> s_distrib (target_s, std_s);
+    std::normal_distribution<double> d_distrib (target_d, std_d);
+
+    for(int i = 1; i < count; ++i)
     {
-        // TODO we should store this 0.02 update frequency in some constants
-        double t = 0.02 * (i + 1);
+        Trajectory traj = this->current_trajectory.clone(from_point_index);    
+        double new_target_s = s_distrib(generator);
+        double new_target_d = d_distrib(generator);
+
+        start_s = {last_s, last_s_vel, last_s_acc};
+        end_s = {new_target_s, target_s_speed, target_s_acc};
+        
+        start_d = {last_d, last_d_vel, last_d_acc};
+        end_d = {new_target_d, target_d_speed, target_d_acc};
+
+        coeffs_s = this->JMT(start_s, end_s, time_interval);
+        coeffs_d = this->JMT(start_d, end_d, time_interval);
+
+        this->appendPath(start_s, end_s, start_d, end_d, traj, time_interval);
+
+
+        trajs.push_back(traj);
+    }
+
+    return trajs;
+}
+
+void PathGenerator::appendPath(vector<double> start_s, vector<double> end_s, 
+                                     vector<double> start_d, vector<double> end_d, 
+                                     Trajectory& trajectory, double time_interval)
+{
+    vector<double> coeffs_s = this->JMT(start_s, end_s, time_interval);
+    vector<double> coeffs_d = this->JMT(start_d, end_d, time_interval);
+
+    int total_points = time_interval / CONTROLLER_UPDATE_RATE_SECONDS;
+    int points_remaining = total_points - trajectory.size();
+    Map& map = Map::getInstance();
+    
+    double last_x = trajectory.xs[trajectory.size() - 1];
+    double last_y = trajectory.ys[trajectory.size() - 1];
+
+    double last_s = trajectory.ss[trajectory.size() - 1];
+    double last_d = trajectory.ds[trajectory.size() - 1];
+
+    for(int i = 0; i < points_remaining; ++i)
+    {     
+        double t = CONTROLLER_UPDATE_RATE_SECONDS * (i + 1);
         double t_2 = pow(t, 2);
         double t_3 = pow(t, 3);
         double t_4 = pow(t, 4);
@@ -162,21 +224,26 @@ vector<Trajectory> PathGenerator::generatePaths(double target_s, double target_d
         double d_jerk = 6 * coeffs_d[3] + 24 * coeffs_d[4] * t + 60 * coeffs_d[5] * t_2;
         
         vector<double> x_y = map.toRealWorldXY(s_t, d_t);
-        // TODO fix the theta angle
-        first_traj.add(x_y[0], x_y[1], 
-                       s_t, s_t_dot, s_t_dot_dot, 
-                       d_t, d_t_dot, d_t_dot_dot, 0.0);
+        double x = x_y[0];
+        double y = x_y[1];
 
+        double theta = atan2(y - last_y, x - last_x);
+        // TODO fix the theta angle
+        trajectory.add(x_y[0], x_y[1], 
+                       s_t, s_t_dot, s_t_dot_dot, s_jerk, 
+                       d_t, d_t_dot, d_t_dot_dot, d_jerk, 
+                       theta);
+        
+        double dist = distance(last_x, last_y, x, y);
+        last_x = x;
+        last_y = y;
+    
         // cout << "[" << i << "] jerk_s=" << s_jerk << " jerk_d=" << d_jerk << endl;   
         // cout << "(Updated) s[" << i << "]: pos= " << s_t << " vel="<< s_t_dot << " acc=" << s_t_dot_dot << endl;                
         // cout << "(Updated) d[" << i << "]: pos= " << d_t << " vel="<< d_t_dot << " acc=" << d_t_dot_dot << endl;                
+        // cout << "(Updated) x[" << i << "]=" << x_y[0] << " y[" << i << "]=" << x_y[1] <<  " - dist=" << dist << endl;
         // cout << "Car speed MPS=" << car_speed << " mps=" << car_speed_mps << endl;
-        
-    }
-
-    trajs.push_back(first_traj);
-
-    return trajs;
+    }    
 }
 
 

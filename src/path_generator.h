@@ -45,6 +45,22 @@ class PathGenerator
          * @return vector<double> the 6 coefficients vector of the quintic polynomial that minimizes jerk
          */
         vector<double> JMT(vector< double> start, vector <double> end, double T);
+
+
+        /**
+         * @brief Appends a trajectory with the start and end targets in Frenet coordinates
+         * to the supplied trajectory
+         * 
+         * @param start_s the vector of longitudinal start  position , velocity and acceleration
+         * @param end_s the vector of longitudinal end position, velocity and acceleration
+         * @param start_d the vector of lateral start position, velocity and acceleration
+         * @param end_d the vector of lateral end position, velocity and acceleration
+         * @param trajectory the trajectory to append to         
+         * @param time_interval the time interval in seconds to execute this trajectory
+         */
+        void appendPath(vector<double> start_s, vector<double> end_s, 
+                                vector<double> start_d, vector<double> end_d, 
+                                Trajectory &trajectory, double time_interval);
 };
 
 

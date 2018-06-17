@@ -3,6 +3,7 @@
 #include <math.h>
 #include "map.h"
 #include "helpers.h"
+#include "spline.h"
 
 using namespace std;
 
@@ -23,6 +24,14 @@ void Map::addWaypoint(double x, double y, double s, double dx, double dy)
     this->map_waypoints_s.push_back(s);
     this->map_waypoints_dx.push_back(dx);
     this->map_waypoints_dy.push_back(dy);
+}
+
+void Map::buildSplines()
+{	
+	this->sp_x_s.set_points(this->map_waypoints_s, this->map_waypoints_x);	
+	this->sp_y_s.set_points(this->map_waypoints_s, this->map_waypoints_y);
+	this->sp_dx_s.set_points(this->map_waypoints_s, this->map_waypoints_dx);
+	this->sp_dy_s.set_points(this->map_waypoints_s, this->map_waypoints_dy);
 }
 
 int Map::closestWaypoint(double x, double y)
@@ -119,29 +128,10 @@ vector<double> Map::toFrenet(double x, double y, double theta)
 
 vector<double> Map::toRealWorldXY(double s, double d)
 {
-    // cout << "TO READLWORLD - MAP-SIZE=" << this->map_waypoints_x.size() << endl;
-    int prev_wp = -1;
+	// Use the spline we have created to get a smoother path
+	double x = sp_x_s(s) + d * sp_dx_s(s);
+	double y = sp_y_s(s) + d * sp_dy_s(s);
 
-	while(s > this->map_waypoints_s[prev_wp+1] && (prev_wp < (int)(this->map_waypoints_s.size()-1) ))
-	{
-		prev_wp++;
-	}
-
-	int wp2 = (prev_wp+1)%this->map_waypoints_x.size();
-
-	double heading = atan2((this->map_waypoints_y[wp2]-this->map_waypoints_y[prev_wp]),(this->map_waypoints_x[wp2]-this->map_waypoints_x[prev_wp]));
-	// the x,y,s along the segment
-	double seg_s = (s-this->map_waypoints_s[prev_wp]);
-
-	double seg_x = this->map_waypoints_x[prev_wp]+seg_s*cos(heading);
-	double seg_y = this->map_waypoints_y[prev_wp]+seg_s*sin(heading);
-
-	double perp_heading = heading-pi()/2;
-
-	double x = seg_x + d*cos(perp_heading);
-	double y = seg_y + d*sin(perp_heading);
-
-	return {x,y};
-
+	return {x, y};
 }
 

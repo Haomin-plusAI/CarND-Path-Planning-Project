@@ -28,6 +28,19 @@ double speedCostFunction(const Vehicle& ego, const vector<Vehicle>& others,  con
     return weight * (1 - exp(- abs(diff)));
 }
 
+double centerOfLaneDistCostFunction(const Vehicle& ego, const vector<Vehicle>& others,  const Trajectory& trajectory, 
+                                    const State& state, const double& weight)
+{
+    double final_d = trajectory.ds[trajectory.ds.size() - 1];    
+    int lane = calculateLane(final_d, DEFAULT_LANE_SPACING, DEFAULT_LANE_INSIDE_OFFSET);
+    int lane_center = getLaneCenterFrenet(lane);
+    
+    double diff = lane_center - final_d;
+    
+    return weight * (1 - exp(- abs(diff)));
+}
+
+
 double laneChangeCostFunction(const Vehicle& ego, const vector<Vehicle>& others,  const Trajectory& trajectory, 
                               const State& state, const double& weight)
 {

@@ -1,9 +1,12 @@
 #ifndef MAP_H
 #define MAP_H
+#include "spline.h"
 #include <iostream>
 #include <vector>
 
+
 using namespace std;
+using namespace tk;
 class Map
 {
     public:
@@ -14,6 +17,8 @@ class Map
         void operator=(Map const&)    = delete;
 
         void addWaypoint(double x, double y, double s, double dx, double dy);
+        void buildSplines();
+
         
         vector<double> toFrenet(double x, double y, double theta);
 
@@ -28,6 +33,13 @@ class Map
         vector<double> map_waypoints_s;
         vector<double> map_waypoints_dx;
         vector<double> map_waypoints_dy;
+
+        tk::spline sp_x_s;
+        tk::spline sp_y_s;
+        tk::spline sp_dx_s;
+        tk::spline sp_dy_s;
+
+
 
         int closestWaypoint(double x, double y);
         int nextWaypoint(double x, double y, double theta);
