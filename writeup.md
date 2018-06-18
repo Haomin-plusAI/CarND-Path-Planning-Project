@@ -45,3 +45,33 @@ A collision is identified when the distance between our ego vehicle and the othe
 The `predictCollision` class will then return the x, y and the timestep of the forecast collision.
 
 
+# Create smoother trajectory
+
+The map waypoints we are given are quite sparse and can lead to very 
+"angular" trajectories generated when we try to convert from Frenet back to 
+real world coordinates. This in turn causes sudden spikes in acceleration 
+and jerk.
+As the function toRealWorld(s, d) -> (x, y) uses basic interpolation between
+two waypoints to find the best approximate values for x and y, we always run
+the risk of generating a non-smooth trajectory.
+
+What can we do to improve upon this. From some of the projects in previous 
+terms, we have seen that lines derived from a polynomial tend to produce 
+very smooth trajectories. Therefore we should employ this technique instead
+of the basic interpolation that is currently being used. We resort to using
+ splines created by using the position s in Frenet coordinates to obtain 
+ the real-world coordinates _x_, _y_, and offsets _dx_ and _dy_. We then 
+ plug in this formula to obtain the closest real-world coordinates
+ 
+ ```
+ x = spline_s_x(s) + d * spline_s_dx(s)
+ y = spline_s_y(s) + d * spline_s_dy(s)
+ ```
+
+ Now we can see an _remarkably_ smooth our trajectory has become. 
+
+ (INSERT IMAGE OF SMOOTH TRAJECTORY)
+
+
+
+

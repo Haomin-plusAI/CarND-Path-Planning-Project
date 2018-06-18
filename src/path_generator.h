@@ -20,6 +20,11 @@ class PathGenerator
 
         ~PathGenerator();
 
+
+        // TODO When generating path we need to give the option on whether
+        // we want to force a lane centering or simply use the current lane 
+        // coordinate d
+
         /**
          * Generates a number of paths given a set of target conditions
          * 
