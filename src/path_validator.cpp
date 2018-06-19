@@ -9,22 +9,35 @@
 using namespace std;
 
 PathValidator::PathValidator()
-{}
+{
+}
 
 PathValidator::~PathValidator()
-{}
+{
+}
 
-PathValidationStatus PathValidator::validate(const Vehicle& ego,
+PathValidationStatus PathValidator::validate(const Vehicle &ego,
                                              vector<Vehicle> others,
-                                             const State& state,
-                                             const Trajectory& trajectory,
+                                             const State &state,
+                                             const Trajectory &trajectory,
                                              int from_point) const
 {
+    // Reject change lane trajectories when the speed is below 30 KM/H
+    cout << "*** VELOCITY BEFORE LANE CHANGE " << trajectory.averageSpeed(trajectory.size()) << endl;
+    cout << "*** EGO SPEED " << ego.getSpeed() << endl;
+    if (state.d_state != LateralState::STAY_IN_LANE)
+    {
+        if (trajectory.averageSpeed(trajectory.size()) < 9)
+        {
+            cout << "VELOCITY TOO LOW FOR LANE CHANGE " << trajectory.averageSpeed(trajectory.size()) << endl;
+            return PathValidationStatus::VELOCITY_TOO_LOW_FOR_LANE_CHANGE;
+        }
+    }
+
     // if(!isLaneValid(state.current_lane) || !isLaneValid(state.future_lane))
     // {
     //     return PathValidationStatus::OUTSIDE_OF_LANE;
     // }
-
 
     double total_s_acc = 0.0;
     double total_d_acc = 0.0;
@@ -34,12 +47,12 @@ PathValidationStatus PathValidator::validate(const Vehicle& ego,
     double total_d_jerk = 0.0;
     double prev_s_vel = 0.0;
     double prev_d_vel = 0.0;
-    
-    for(int i = from_point; i < trajectory.xs.size(); ++i)
+
+    for (int i = from_point; i < trajectory.xs.size(); ++i)
     {
         double last_s = trajectory.ss[i - 1];
         double last_d = trajectory.ds[i - 1];
-        
+
         double cur_s = trajectory.ss[i];
         double cur_d = trajectory.ds[i];
 
@@ -48,7 +61,7 @@ PathValidationStatus PathValidator::validate(const Vehicle& ego,
 
         total_s_vel += s_vel;
         total_d_vel += d_vel;
-        
+
         double s_acc = i < from_point + 1 ? 0.0 : s_vel - prev_s_vel;
         double d_acc = i < from_point + 1 ? 0.0 : d_vel - prev_d_vel;
 
@@ -61,58 +74,53 @@ PathValidationStatus PathValidator::validate(const Vehicle& ego,
         // TODO Check turning angle should be less than a specified value
     }
 
-    cout << "------------- TOTAL S_ACC = " << total_s_acc << endl;
-    cout << "------------- TOTAL D_ACC = " << total_d_acc << endl;
+    // cout << "------------- TOTAL S_ACC = " << total_s_acc << endl;
+    // cout << "------------- TOTAL D_ACC = " << total_d_acc << endl;
 
     double total_acc = 0;
     double prev_velocity = 0.0;
     double total_velocity = 0.0;
     int segment_size = trajectory.size() - from_point;
-    for(int i = from_point;i < trajectory.size(); ++i)
+    for (int i = from_point; i < trajectory.size(); ++i)
     {
         double last_x = trajectory.xs[i - 1];
         double last_y = trajectory.ys[i - 1];
-        
+
         double cur_x = trajectory.xs[i];
         double cur_y = trajectory.ys[i];
 
-        double vel = distance(last_x, last_y, cur_x, cur_y);     
-        // cout << "**** DISTANCE  = " << vel << endl;           
-        // cout << "**** VELOCITY  = " << vel / CONTROLLER_UPDATE_RATE_SECONDS << endl;           
-        
-        if(vel / CONTROLLER_UPDATE_RATE_SECONDS > 22.2)
+        double vel = distance(last_x, last_y, cur_x, cur_y);
+        // cout << "**** DISTANCE  = " << vel << endl;
+        // cout << "**** VELOCITY  = " << vel / CONTROLLER_UPDATE_RATE_SECONDS << endl;
+
+        if (vel / CONTROLLER_UPDATE_RATE_SECONDS > 22.2)
         {
             cout << "**** MAXIMUM VELOCITY ABOVE THRESHOLD = " << vel / CONTROLLER_UPDATE_RATE_SECONDS << endl;
             return PathValidationStatus::VELOCITY_ABOVE_THRESHOLD;
         }
 
-
         total_velocity += vel;
-        double acc = i == from_point ? 0.0 : vel - prev_velocity;        
-        total_acc += acc;        
+        double acc = i == from_point ? 0.0 : vel - prev_velocity;
+        total_acc += acc;
 
-        prev_velocity = vel;        
+        prev_velocity = vel;
     }
-    double avg_velocity = total_velocity  / (segment_size * CONTROLLER_UPDATE_RATE_SECONDS);
+    double avg_velocity = total_velocity / (segment_size * CONTROLLER_UPDATE_RATE_SECONDS);
 
     // cout << "**** AVG VELOCITY = " << avg_velocity << endl;
     // cout << "**** TOTAL ACCELERATION = " << total_acc << endl;
-    
-    if(abs(avg_velocity) < 3)
+
+    if (abs(avg_velocity) < 3)
     {
         cout << "**** AVG VELOCITY BELOW THRESHOLD = " << avg_velocity << endl;
         return PathValidationStatus::AVERAGE_SPEED_BELOW_THRESHOLD;
     }
-    
-    if(abs(total_acc) >= 10.0)
+
+    if (abs(total_acc) >= 10.0)
     {
         cout << "**** TOTAL ACCELERATION EXCEEDED " << total_acc << endl;
         return PathValidationStatus::TOTAL_ACCELERATION_ABOVE_THRESHOLD;
     }
-
-    
-
-
 
     // // TODO maybe have a closest vehicles(ego, vehicles, lane) function that
     // // returns sorted vector of closest vehicles to ego on lane
@@ -121,7 +129,7 @@ PathValidationStatus PathValidator::validate(const Vehicle& ego,
     // for(const Vehicle& v : others)
     // {
     //     // Other car must be ahead in the same current or future lane
-    //     if(v.isInLane && (v.lane == state.current_lane || v.lane == state.future_lane) 
+    //     if(v.isInLane && (v.lane == state.current_lane || v.lane == state.future_lane)
     //        && v.s > ego.s)
     //     {
     //         double dist = distance(ego.x, ego.y, v.x, v.y);
@@ -144,8 +152,6 @@ PathValidationStatus PathValidator::validate(const Vehicle& ego,
     //         return PathValidationStatus::COLLISION_VEHICLE_AHEAD;
     //     }
     // }
-    
-    
-    return PathValidationStatus::VALID;
 
+    return PathValidationStatus::VALID;
 }
