@@ -27,6 +27,7 @@ class Behaviour{
 
     private:
         StateMachine state_machine;
+        Trajectory trajectory;
         int current_timestep;        
         int lock_timestep;        
 
