@@ -18,6 +18,13 @@ Behaviour::Behaviour(){
     this->lock_timestep = 0;    
 }
 
+Trajectory nextTrajectory(const Vehicle &ego, const vector<Vehicle>& others, 
+                          vector<double>& previous_path_x, vector<double>& previous_path_y)
+{
+    Trajectory t;
+    return t;
+}
+
 vector<State> Behaviour::update(const Vehicle& ego, const vector<Vehicle> others,
                                 Trajectory& current_trajectory)
 {
