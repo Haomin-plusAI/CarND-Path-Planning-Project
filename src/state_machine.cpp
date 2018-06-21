@@ -26,14 +26,12 @@ StateMachine::StateMachine()
 StateMachine::StateMachine(State s)
 {
     this->current_state = s;
-    cout << "** ASSIGNED STATE WITH CURRENT LANE = " << this->current_state.current_lane << endl;
     this->current_timestep = 0;
     this->timestep_lock = -1;
 }
 
 const State StateMachine::getCurrentState() const
 {
-    cout << "** LATER STATE WITH CURRENT LANE = " << this->current_state.current_lane << endl;
     return this->current_state;
 }
 
@@ -50,12 +48,6 @@ void StateMachine::updateState(State next_state, int keep_until_timestep)
 
 vector<State> StateMachine::nextPossibleStates()
 {
-
-    cout << "* STATE MACHINE - current state: (" << this->current_state.s_state
-         << "," << this->current_state.d_state << ")"
-         << " >>>>>> " << this->current_state.current_lane << " -> " << this->current_state.future_lane
-         << endl;
-
     // cout << "*** STATE MACHINE TIMESTEPS: "
     //          << this->current_timestep << " < " << this->timestep_lock
     //          << endl;
@@ -63,14 +55,14 @@ vector<State> StateMachine::nextPossibleStates()
     // TODO if the LONGITUDINAL state is stop return STOP and stay in LANE
     // THIS IS VERY IMPORTANT!!
 
-    if (this->current_timestep < this->timestep_lock)
-    {
-        // cout << "*** UPDATES FROZEN RETURNING CURRENT STATE: "
-        //      << this->current_timestep << " < " << this->timestep_lock
-        //  << endl;
-        // If we have a timestep lock then simply return the current state
-        return {this->current_state};
-    }
+    // if (this->current_timestep < this->timestep_lock)
+    // {
+    //     cout << "*** UPDATES FROZEN RETURNING CURRENT STATE: "
+    //          << this->current_timestep << " < " << this->timestep_lock
+    //          << endl;
+    //     // If we have a timestep lock then simply return the current state
+    //     return {this->current_state};
+    // }
 
     LongitudinalState lon_state;
     LateralState lat_state;
@@ -102,12 +94,20 @@ vector<State> StateMachine::nextPossibleStates()
                                       LateralState::PREPARE_CHANGE_LANE_LEFT,
                                       this->current_state.current_lane,
                                       this->current_state.current_lane - 1));
+        future_states.push_back(State(LongitudinalState::DECELERATE,
+                                      LateralState::PREPARE_CHANGE_LANE_LEFT,
+                                      this->current_state.current_lane,
+                                      this->current_state.current_lane - 1));
 
         future_states.push_back(State(LongitudinalState::MAINTAIN_COURSE,
                                       LateralState::PREPARE_CHANGE_LANE_RIGHT,
                                       this->current_state.current_lane,
                                       this->current_state.current_lane + 1));
         future_states.push_back(State(LongitudinalState::ACCELERATE,
+                                      LateralState::PREPARE_CHANGE_LANE_RIGHT,
+                                      this->current_state.current_lane,
+                                      this->current_state.current_lane + 1));
+        future_states.push_back(State(LongitudinalState::DECELERATE,
                                       LateralState::PREPARE_CHANGE_LANE_RIGHT,
                                       this->current_state.current_lane,
                                       this->current_state.current_lane + 1));
@@ -122,6 +122,10 @@ vector<State> StateMachine::nextPossibleStates()
                                       LateralState::STAY_IN_LANE,
                                       this->current_state.current_lane,
                                       this->current_state.current_lane));
+        future_states.push_back(State(LongitudinalState::DECELERATE,
+                                      LateralState::STAY_IN_LANE,
+                                      this->current_state.current_lane,
+                                      this->current_state.current_lane));
         break;
 
     case LateralState::PREPARE_CHANGE_LANE_RIGHT:
@@ -130,6 +134,10 @@ vector<State> StateMachine::nextPossibleStates()
                                       this->current_state.current_lane + 1,
                                       this->current_state.current_lane + 1));
         future_states.push_back(State(LongitudinalState::MAINTAIN_COURSE,
+                                      LateralState::STAY_IN_LANE,
+                                      this->current_state.current_lane,
+                                      this->current_state.current_lane));
+        future_states.push_back(State(LongitudinalState::DECELERATE,
                                       LateralState::STAY_IN_LANE,
                                       this->current_state.current_lane,
                                       this->current_state.current_lane));

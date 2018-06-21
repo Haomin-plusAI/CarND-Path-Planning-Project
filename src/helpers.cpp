@@ -64,7 +64,8 @@ bool isLaneValid(int lane)
 
 double getLaneCenterFrenet(int lane)
 {
-	return 2.0 + 4.0 * lane;
+	// return 2.0 + 4.0 * lane;
+	return 1.8 + 4.0 * lane;
 }
 
 double milesPerHourToKmPerHour(double mph)

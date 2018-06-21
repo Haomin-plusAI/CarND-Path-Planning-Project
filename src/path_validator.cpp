@@ -23,13 +23,14 @@ PathValidationStatus PathValidator::validate(const Vehicle &ego,
                                              int from_point) const
 {
     // Reject change lane trajectories when the speed is below 30 KM/H
-    cout << "*** VELOCITY BEFORE LANE CHANGE " << trajectory.averageSpeed(trajectory.size()) << endl;
-    cout << "*** EGO SPEED " << ego.getSpeed() << endl;
+    // cout << "*** BEGINING PATH VALIDATION STATUS =  for state (" << state.s_state << ", " << state.d_state << ") " << endl;
+    // cout << "*** VELOCITY BEFORE LANE CHANGE " << trajectory.averageSpeed(trajectory.size()) << endl;
+    // cout << "*** EGO SPEED " << ego.getSpeed() << endl;
     if (state.d_state != LateralState::STAY_IN_LANE)
     {
         if (trajectory.averageSpeed(trajectory.size()) < 9)
         {
-            cout << "VELOCITY TOO LOW FOR LANE CHANGE " << trajectory.averageSpeed(trajectory.size()) << endl;
+            // cout << "VELOCITY TOO LOW FOR LANE CHANGE " << trajectory.averageSpeed(trajectory.size()) << endl;
             return PathValidationStatus::VELOCITY_TOO_LOW_FOR_LANE_CHANGE;
         }
     }
@@ -48,7 +49,7 @@ PathValidationStatus PathValidator::validate(const Vehicle &ego,
     double prev_s_vel = 0.0;
     double prev_d_vel = 0.0;
 
-    for (int i = from_point; i < trajectory.xs.size(); ++i)
+    for (int i = from_point + 1; i < trajectory.xs.size(); ++i)
     {
         double last_s = trajectory.ss[i - 1];
         double last_d = trajectory.ds[i - 1];
@@ -58,6 +59,9 @@ PathValidationStatus PathValidator::validate(const Vehicle &ego,
 
         double s_vel = cur_s - last_s;
         double d_vel = cur_d - last_d;
+
+        // cout << "------------- CURRENT S VELOCITY = " << s_vel << endl;
+        // cout << "------------- CURRENT D VELOCITY = " << d_vel << endl;
 
         total_s_vel += s_vel;
         total_d_vel += d_vel;
@@ -81,7 +85,7 @@ PathValidationStatus PathValidator::validate(const Vehicle &ego,
     double prev_velocity = 0.0;
     double total_velocity = 0.0;
     int segment_size = trajectory.size() - from_point;
-    for (int i = from_point; i < trajectory.size(); ++i)
+    for (int i = from_point + 1; i < trajectory.size(); ++i)
     {
         double last_x = trajectory.xs[i - 1];
         double last_y = trajectory.ys[i - 1];
@@ -93,11 +97,11 @@ PathValidationStatus PathValidator::validate(const Vehicle &ego,
         // cout << "**** DISTANCE  = " << vel << endl;
         // cout << "**** VELOCITY  = " << vel / CONTROLLER_UPDATE_RATE_SECONDS << endl;
 
-        if (vel / CONTROLLER_UPDATE_RATE_SECONDS > 22.2)
-        {
-            cout << "**** MAXIMUM VELOCITY ABOVE THRESHOLD = " << vel / CONTROLLER_UPDATE_RATE_SECONDS << endl;
-            return PathValidationStatus::VELOCITY_ABOVE_THRESHOLD;
-        }
+        // if (vel / CONTROLLER_UPDATE_RATE_SECONDS > 22.2)
+        // {
+        //     cout << "**** MAXIMUM VELOCITY ABOVE THRESHOLD = " << vel / CONTROLLER_UPDATE_RATE_SECONDS << endl;
+        //     return PathValidationStatus::VELOCITY_ABOVE_THRESHOLD;
+        // }
 
         total_velocity += vel;
         double acc = i == from_point ? 0.0 : vel - prev_velocity;
@@ -110,17 +114,18 @@ PathValidationStatus PathValidator::validate(const Vehicle &ego,
     // cout << "**** AVG VELOCITY = " << avg_velocity << endl;
     // cout << "**** TOTAL ACCELERATION = " << total_acc << endl;
 
-    if (abs(avg_velocity) < 3)
-    {
-        cout << "**** AVG VELOCITY BELOW THRESHOLD = " << avg_velocity << endl;
-        return PathValidationStatus::AVERAGE_SPEED_BELOW_THRESHOLD;
-    }
+    // if (abs(avg_velocity) < 3)
+    // {
+    //     cout << "**** AVG VELOCITY BELOW THRESHOLD = " << avg_velocity << endl;
+    //     return PathValidationStatus::AVERAGE_SPEED_BELOW_THRESHOLD;
+    // }
 
-    if (abs(total_acc) >= 10.0)
-    {
-        cout << "**** TOTAL ACCELERATION EXCEEDED " << total_acc << endl;
-        return PathValidationStatus::TOTAL_ACCELERATION_ABOVE_THRESHOLD;
-    }
+    // TODO This total acceleration must be multiplied by the segment size times the controlloer update rate
+    // if (abs(total_acc) >= 10.0)
+    // {
+    //     cout << "**** TOTAL ACCELERATION EXCEEDED " << total_acc << endl;
+    //     return PathValidationStatus::TOTAL_ACCELERATION_ABOVE_THRESHOLD;
+    // }
 
     // // TODO maybe have a closest vehicles(ego, vehicles, lane) function that
     // // returns sorted vector of closest vehicles to ego on lane

@@ -181,26 +181,6 @@ int main()
           bool withinLane = isWithinLane(car_d, 4.0, 1.5);
 
           CollisionDetector cdetector = CollisionDetector(main_trajectory);
-          for (const Vehicle &v : vehicles)
-          {
-            if (!v.isInLane)
-            {
-              continue;
-            }
-
-            if (v.lane == myLane)
-            {
-
-              double dist = distance(car_x, car_y, v.x, v.y);
-              double s_diff = v.s - car_s;
-              // cout << "Vehicle " << v.id << " is " << dist << "m (s-diff=" << s_diff
-              //       << ") away in the same lane " << endl;
-              // if(car_s < v.s && s_diff < 25.0){
-              //   acc_sign = -1;
-              //   cout << "**** Will decelerate" << endl;
-              // }
-            }
-          }
 
           json msgJson;
 
@@ -290,140 +270,149 @@ int main()
           else
           {
 
-            cout << "\n\n******* UPDATING " << endl;
-            cout << "trajectory size = " << main_trajectory.size() << endl;
+            // cout << "\n\n******* UPDATING " << endl;
+            // cout << "trajectory size = " << main_trajectory.size() << endl;
 
-            PathGenerator path_gen = PathGenerator(ego, main_trajectory);
-            vector<State> next_states = behaviour.update(ego, vehicles, main_trajectory);
-            // int from_point = 45;
-            int from_point = 35;
+            // PathGenerator path_gen = PathGenerator(ego, main_trajectory);
+            // vector<State> next_states = behaviour.update(ego, vehicles, main_trajectory);
+            // // int from_point = 45;
+            // int from_point = 35;
 
-            PathValidator path_validator;
-            for (const State &state : next_states)
-            {
-              // 1.7 seconds yields very good results for turns
-              auto paths = path_gen.generatePaths(state, ego, main_trajectory, from_point, 1, 1.7);
+            // PathValidator path_validator;
+            // for (const State &state : next_states)
+            // {
+            //   // 1.7 seconds yields very good results for turns
+            //   auto paths = path_gen.generatePaths(state, ego, main_trajectory, from_point, 1, 1.7);
 
-              for (auto &path : paths)
-              {
-                cout << "*** PATH VALIDATION STATUS =  for state (" << state.s_state << ", " << state.d_state << ")" << endl;
-                PathValidationStatus path_status = path_validator.validate(ego, vehicles, state, path, from_point);
-                cout << "-----------> " << path_status << endl;
+            //   for (auto &path : paths)
+            //   {
+            //     cout << "*** PATH VALIDATION STATUS =  for state (" << state.s_state << ", " << state.d_state << ")" << endl;
+            //     PathValidationStatus path_status = path_validator.validate(ego, vehicles, state, path, from_point);
+            //     cout << "-----------> " << path_status << endl;
 
-                if (path_status != PathValidationStatus::VALID)
-                {
-                  continue;
-                }
+            //     if (path_status != PathValidationStatus::VALID)
+            //     {
+            //       continue;
+            //     }
 
-                // PathValidationStatus status = path_validator.validate(ego, vehicles, state, path);
-                // if(status != PathValidationStatus::VALID)
-                // {
-                //   cout << "*** Could not get VALID path status and instead got: " << status << endl;
-                //   continue;
-                // }
+            //     // PathValidationStatus status = path_validator.validate(ego, vehicles, state, path);
+            //     // if(status != PathValidationStatus::VALID)
+            //     // {
+            //     //   cout << "*** Could not get VALID path status and instead got: " << status << endl;
+            //     //   continue;
+            //     // }
 
-                CostFunction lane_center_cost_fn = centerOfLaneDistCostFunction;
-                double lane_center_cost = centerOfLaneDistCostFunction(ego, vehicles, path, state, 5.0);
+            //     CostFunction lane_center_cost_fn = centerOfLaneDistCostFunction;
+            //     double lane_center_cost = centerOfLaneDistCostFunction(ego, vehicles, path, state, 5.0);
 
-                CostFunction cost_speed_fn = speedCostFunction;
-                double cost_speed = cost_speed_fn(ego, vehicles, path, state, 1.0);
+            //     CostFunction cost_speed_fn = speedCostFunction;
+            //     double cost_speed = cost_speed_fn(ego, vehicles, path, state, 1.0);
 
-                CostFunction avg_speed_lane_diff_fn = averageLaneSpeedDiffCostFunction;
-                double avg_speed_lane_diff_cost = avg_speed_lane_diff_fn(ego, vehicles, path, state, 10.0);
+            //     CostFunction avg_speed_lane_diff_fn = averageLaneSpeedDiffCostFunction;
+            //     double avg_speed_lane_diff_cost = avg_speed_lane_diff_fn(ego, vehicles, path, state, 10.0);
 
-                CostFunction dist_cars_cost_fn = distanceToClosestCarAheadCostFunction;
-                double cost_dist_cars = dist_cars_cost_fn(ego, vehicles, path, state, 5.0);
+            //     CostFunction dist_cars_cost_fn = distanceToClosestCarAheadCostFunction;
+            //     double cost_dist_cars = dist_cars_cost_fn(ego, vehicles, path, state, 5.0);
 
-                CostFunction change_lane_cost_fn = laneChangeCostFunction;
-                double change_lane_cost = change_lane_cost_fn(ego, vehicles, path, state, 10.0);
+            //     CostFunction change_lane_cost_fn = laneChangeCostFunction;
+            //     double change_lane_cost = change_lane_cost_fn(ego, vehicles, path, state, 10.0);
 
-                CostFunction future_dist_to_goal_cost_fn = futureDistanceToGoalCostFunction;
-                double future_dist_to_goal_cost = future_dist_to_goal_cost_fn(ego, vehicles, path, state, 1.0);
+            //     CostFunction future_dist_to_goal_cost_fn = futureDistanceToGoalCostFunction;
+            //     double future_dist_to_goal_cost = future_dist_to_goal_cost_fn(ego, vehicles, path, state, 1.0);
 
-                CostFunction speed_diff_to_car_ahead_fn = speedDifferenceWithClosestCarAheadCostFunction;
-                double speed_diff_to_car_ahead_cost = speed_diff_to_car_ahead_fn(ego, vehicles, path, state, 100.0);
+            //     CostFunction speed_diff_to_car_ahead_fn = speedDifferenceWithClosestCarAheadCostFunction;
+            //     double speed_diff_to_car_ahead_cost = speed_diff_to_car_ahead_fn(ego, vehicles, path, state, 100.0);
 
-                CostFunction collision_time_cost_fn = collisionTimeCostFunction;
-                double collision_time_cost = collision_time_cost_fn(ego, vehicles, path, state, 100.0);
+            //     CostFunction collision_time_cost_fn = collisionTimeCostFunction;
+            //     double collision_time_cost = collision_time_cost_fn(ego, vehicles, path, state, 100.0);
 
-                CostFunction dist_car_future_lane_cost_fn = distanceToClosestCarAheadFutureLaneCostFunction;
-                // double dist_car_future_lane_cost = dist_car_future_lane_cost_fn(ego, vehicles, path, state, 100.0);
-                double dist_car_future_lane_cost = 0.0;
+            //     CostFunction dist_car_future_lane_cost_fn = distanceToClosestCarAheadFutureLaneCostFunction;
+            //     // double dist_car_future_lane_cost = dist_car_future_lane_cost_fn(ego, vehicles, path, state, 100.0);
+            //     double dist_car_future_lane_cost = 0.0;
 
-                CostFunction lon_dist_adjacent_car_cost_fn = longitudinalDistanceToClosestAdjacentCarFunction;
-                double lon_dist_adjacent_car_cost = lon_dist_adjacent_car_cost_fn(ego, vehicles, path, state, 1000.0);
+            //     CostFunction lon_dist_adjacent_car_cost_fn = longitudinalDistanceToClosestAdjacentCarFunction;
+            //     double lon_dist_adjacent_car_cost = lon_dist_adjacent_car_cost_fn(ego, vehicles, path, state, 1000.0);
 
-                double final_cost = lane_center_cost + cost_speed + avg_speed_lane_diff_cost + cost_dist_cars + change_lane_cost + future_dist_to_goal_cost + speed_diff_to_car_ahead_cost + collision_time_cost + dist_car_future_lane_cost + lon_dist_adjacent_car_cost;
+            //     double final_cost = lane_center_cost + cost_speed + avg_speed_lane_diff_cost + cost_dist_cars + change_lane_cost + future_dist_to_goal_cost + speed_diff_to_car_ahead_cost + collision_time_cost + dist_car_future_lane_cost + lon_dist_adjacent_car_cost;
 
-                // if(ego.lane != state.current_lane)
-                // {
-                //   cout << "*********************************************************************************" << endl;
-                //   cout << "*********************************************************************************" << endl;
-                //   cout << "*********************************************************************************" << endl;
-                //   cout << "*********************************************************************************" << endl;
-                //   cout << "*********************************************************************************" << endl;
-                //   exit(1);
-                // }
+            //     // if(ego.lane != state.current_lane)
+            //     // {
+            //     //   cout << "*********************************************************************************" << endl;
+            //     //   cout << "*********************************************************************************" << endl;
+            //     //   cout << "*********************************************************************************" << endl;
+            //     //   cout << "*********************************************************************************" << endl;
+            //     //   cout << "*********************************************************************************" << endl;
+            //     //   exit(1);
+            //     // }
 
-                // cout << "** Generating paths for state: (" << state.s_state
-                //   << "," << state.d_state << ")"
-                //   << ", (current-lane=" << state.current_lane << ",future-lane=" << state.future_lane << ")\n"
-                //   << "EGO LANE = " << ego.lane << "\n"
-                //   << "\t---> cost speed = " <<  cost_speed << "\n"
-                //   << "\t---> cost dist car same lane = " <<  cost_dist_cars << "\n"
-                //   << "\t---> cost dist car future lane = " <<  dist_car_future_lane_cost << "\n"
-                //   << "\t---> lon dist adjacent car = " <<  lon_dist_adjacent_car_cost << "\n"
-                //   << "\t---> cost future dist goal = " <<  future_dist_to_goal_cost << "\n"
-                //   << "\t---> cost speed diff car ahead = " <<  speed_diff_to_car_ahead_cost << "\n"
-                //   << "\t---> cost collision ahead = " <<  collision_time_cost << "\n"
-                //   << "\t---> FINAL COST = " <<  final_cost << "\n"
-                // << endl;
+            //     // cout << "** Generating paths for state: (" << state.s_state
+            //     //   << "," << state.d_state << ")"
+            //     //   << ", (current-lane=" << state.current_lane << ",future-lane=" << state.future_lane << ")\n"
+            //     //   << "EGO LANE = " << ego.lane << "\n"
+            //     //   << "\t---> cost speed = " <<  cost_speed << "\n"
+            //     //   << "\t---> cost dist car same lane = " <<  cost_dist_cars << "\n"
+            //     //   << "\t---> cost dist car future lane = " <<  dist_car_future_lane_cost << "\n"
+            //     //   << "\t---> lon dist adjacent car = " <<  lon_dist_adjacent_car_cost << "\n"
+            //     //   << "\t---> cost future dist goal = " <<  future_dist_to_goal_cost << "\n"
+            //     //   << "\t---> cost speed diff car ahead = " <<  speed_diff_to_car_ahead_cost << "\n"
+            //     //   << "\t---> cost collision ahead = " <<  collision_time_cost << "\n"
+            //     //   << "\t---> FINAL COST = " <<  final_cost << "\n"
+            //     // << endl;
 
-                cout << left << "(" << state.s_state << "," << state.d_state << ")"
-                     << ":" << state.current_lane << "->" << state.future_lane << endl;
-                cout << left << setw(14) << setfill(' ') << "   Ego Lane: " << ego.lane;
-                cout << left << "| " << setw(13) << setfill(' ') << lane_center_cost;
-                cout << left << "| " << setw(13) << setfill(' ') << cost_speed;
-                cout << left << "| " << setw(13) << setfill(' ') << avg_speed_lane_diff_cost;
-                cout << left << "| " << setw(13) << setfill(' ') << cost_dist_cars;
-                cout << left << "| " << setw(13) << setfill(' ') << change_lane_cost;
-                cout << left << "| " << setw(13) << setfill(' ') << dist_car_future_lane_cost;
-                cout << left << "| " << setw(13) << setfill(' ') << lon_dist_adjacent_car_cost;
-                cout << left << "| " << setw(13) << setfill(' ') << future_dist_to_goal_cost;
-                cout << left << "| " << setw(13) << setfill(' ') << speed_diff_to_car_ahead_cost;
-                cout << left << "| " << setw(13) << setfill(' ') << collision_time_cost;
-                cout << left << "| " << setw(13) << setfill(' ') << final_cost;
-                cout << endl;
+            //     cout << left << "(" << state.s_state << "," << state.d_state << ")"
+            //          << ":" << state.current_lane << "->" << state.future_lane << endl;
+            //     cout << left << setw(14) << setfill(' ') << "   Ego Lane: " << ego.lane;
+            //     cout << left << "| " << setw(13) << setfill(' ') << lane_center_cost;
+            //     cout << left << "| " << setw(13) << setfill(' ') << cost_speed;
+            //     cout << left << "| " << setw(13) << setfill(' ') << avg_speed_lane_diff_cost;
+            //     cout << left << "| " << setw(13) << setfill(' ') << cost_dist_cars;
+            //     cout << left << "| " << setw(13) << setfill(' ') << change_lane_cost;
+            //     cout << left << "| " << setw(13) << setfill(' ') << dist_car_future_lane_cost;
+            //     cout << left << "| " << setw(13) << setfill(' ') << lon_dist_adjacent_car_cost;
+            //     cout << left << "| " << setw(13) << setfill(' ') << future_dist_to_goal_cost;
+            //     cout << left << "| " << setw(13) << setfill(' ') << speed_diff_to_car_ahead_cost;
+            //     cout << left << "| " << setw(13) << setfill(' ') << collision_time_cost;
+            //     cout << left << "| " << setw(13) << setfill(' ') << final_cost;
+            //     cout << endl;
 
-                if (final_cost < lowest_cost)
-                {
-                  lowest_cost = final_cost;
-                  chosen_trajectory = path;
-                  chosen_state = state;
-                  state_chosen = true;
-                }
-              }
-            }
+            //     if (final_cost < lowest_cost)
+            //     {
+            //       lowest_cost = final_cost;
+            //       chosen_trajectory = path;
+            //       chosen_state = state;
+            //       state_chosen = true;
+            //     }
+            //   }
+            // }
 
-            if (!state_chosen)
-            {
-              cout << "************ NO STATE CHOSEN *****" << endl;
-            }
-            cout << "* UPDATE - Chosen state: (" << chosen_state.s_state
-                 << "," << chosen_state.d_state << ")" << endl;
+            // if (!state_chosen)
+            // {
+            //   cout << "************ NO STATE CHOSEN *****" << endl;
+            // }
+            // cout << "* UPDATE - Chosen state: (" << chosen_state.s_state
+            //      << "," << chosen_state.d_state << ")" << endl;
 
-            main_trajectory = chosen_trajectory;
+            // main_trajectory = chosen_trajectory;
+
+            chosen_trajectory = behaviour.nextTrajectory(ego, vehicles, ppx, ppy);
 
             for (int i = 0; i < chosen_trajectory.xs.size(); ++i)
             {
               next_x_vals.push_back(chosen_trajectory.xs[i]);
               next_y_vals.push_back(chosen_trajectory.ys[i]);
             }
-
             main_trajectory = chosen_trajectory;
-            behaviour.updateState(chosen_state);
 
-            vector<double> a_a = main_trajectory.averageAcceleration(0.02);
+            // for (int i = 0; i < chosen_trajectory.xs.size(); ++i)
+            // {
+            //   next_x_vals.push_back(chosen_trajectory.xs[i]);
+            //   next_y_vals.push_back(chosen_trajectory.ys[i]);
+            // }
+
+            // main_trajectory = chosen_trajectory;
+            // behaviour.updateState(chosen_state);
+
+            // vector<double> a_a = main_trajectory.averageAcceleration(0.02);
             // cout << "(Update) All trajectories added: size=" << main_trajectory.size()
             //      << " avg speed=" << main_trajectory.averageSpeed(0.02) << "mps"
             //      << " avg acc=(" << a_a[0] << ", " << a_a[1] << ")" << endl;

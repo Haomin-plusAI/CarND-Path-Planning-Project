@@ -57,10 +57,10 @@ vector<Trajectory> PathGenerator::generatePaths(const State &state, const Vehicl
         target_s_vel = speed_at_index * 0.6;
     }
 
-    if (target_s_vel > 22)
+    if (target_s_vel > 21)
     {
         // 22m/s ~ 50 MPH
-        target_s_vel = 22;
+        target_s_vel = 21;
     }
     // cout << "**** DESIRED SPEED =" << target_s_vel << endl;
 
@@ -105,6 +105,7 @@ vector<Trajectory> PathGenerator::generatePaths(const State &state, const Vehicl
 
     // cout << "******** START S = " << current_trajectory.ss[from_point_index] << endl;
     target_s = (current_trajectory.ss[from_point_index] + target_s_vel * time_interval);
+    // target_s = (current_trajectory.ss[from_point_index] + target_s_vel * 1.0);
 
     return this->generatePaths(target_s, target_d, target_s_vel,
                                0.0, 0.0, 0.0, std_s, std_d,
@@ -197,7 +198,7 @@ void PathGenerator::appendPath(vector<double> start_s, vector<double> end_s,
     vector<double> coeffs_d = this->JMT(start_d, end_d, time_interval);
 
     int total_points = time_interval / CONTROLLER_UPDATE_RATE_SECONDS;
-    cout << "^^^^^^ TOTAL POINTS " << total_points << endl;
+    // cout << "^^^^^^ TOTAL POINTS " << total_points << endl;
     int points_remaining = total_points - trajectory.size();
     Map &map = Map::getInstance();
 
@@ -241,9 +242,9 @@ void PathGenerator::appendPath(vector<double> start_s, vector<double> end_s,
         last_y = y;
 
         // cout << "[" << i << "] jerk_s=" << s_jerk << " jerk_d=" << d_jerk << endl;
-        // cout << "(Updated) s[" << i << "]: pos= " << s_t << " vel="<< s_t_dot << " acc=" << s_t_dot_dot << endl;
+        // cout << "(Updated) s[" << i << "]: pos= " << s_t << " vel=" << s_t_dot << " acc=" << s_t_dot_dot << endl;
         // cout << "(Updated) d[" << i << "]: pos= " << d_t << " vel="<< d_t_dot << " acc=" << d_t_dot_dot << endl;
-        // cout << "(Updated) x[" << i << "]=" << x_y[0] << " y[" << i << "]=" << x_y[1] <<  " - dist=" << dist << endl;
+        // cout << "(Updated) x[" << i << "]=" << x_y[0] << " y[" << i << "]=" << x_y[1] << " - dist=" << dist << endl;
         // cout << "Car speed MPS=" << car_speed << " mps=" << car_speed_mps << endl;
     }
 }

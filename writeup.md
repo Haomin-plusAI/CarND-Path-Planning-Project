@@ -73,5 +73,14 @@ of the basic interpolation that is currently being used. We resort to using
  (INSERT IMAGE OF SMOOTH TRAJECTORY)
 
 
+ # Speed limit
+
+ I initially had set the maximum speed to be at 22 meters per second, which roughly equates to 50MPH but 
+ some sections of my jerk minimised path sometimes exceeded this speed, so I decided to bring down the maximum
+ achievable speed to around 21 meters per second, which is close to 47MPH.
+ I've noticed that leaving this safety buffer helps in never violating the speed limit set in the simulator.
+ The downside is also somewhat mitigated as we are generally less than 2MPH from the maximum authorised speed. 
+
+
 
 
