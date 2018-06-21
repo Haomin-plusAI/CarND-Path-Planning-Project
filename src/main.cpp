@@ -66,12 +66,11 @@ string hasData(string s)
   return "";
 }
 
-void printCarPosition(json pos)
+void printCarPosition(const Vehicle &ego)
 {
-  auto carPos = pos[1];
-  cout << "(x=" << carPos["x"] << ", y=" << carPos["y"] << ") "
-       << "(s=" << carPos["s"] << ", d=" << carPos["d"] << ") "
-       << "yaw=" << carPos["yaw"] << ", speed=" << carPos["speed"]
+  cout << "(x=" << ego.x << ", y=" << ego.y << ") "
+       << "(s=" << ego.s << ", d=" << ego.d << ") "
+       << "yaw=" << ego.theta << ", speed=" << ego.getSpeed()
        << endl;
 }
 
@@ -154,8 +153,6 @@ int main()
           double car_yaw = j[1]["yaw"];
           double car_speed = j[1]["speed"];
 
-          printCarPosition(j);
-
           // Previous path data given to the Planner
           auto previous_path_x = j[1]["previous_path_x"];
           auto previous_path_y = j[1]["previous_path_y"];
@@ -210,6 +207,7 @@ int main()
 
           double car_speed_mps = KmPerHourToMetersPerSecond(milesPerHourToKmPerHour(car_speed));
           Vehicle ego = Vehicle(-1, car_x, car_y, cos(car_yaw_rad), sin(car_yaw_rad), car_s, car_d, 0.0);
+          printCarPosition(ego);
 
           // double acc_s = 0.0;
           // if(previous_path_x.size() > 0)
