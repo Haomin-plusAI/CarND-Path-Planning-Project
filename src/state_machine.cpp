@@ -116,8 +116,8 @@ vector<State> StateMachine::nextPossibleStates()
     case LateralState::PREPARE_CHANGE_LANE_LEFT:
         future_states.push_back(State(LongitudinalState::MAINTAIN_COURSE,
                                       LateralState::CHANGE_LANE_LEFT,
-                                      this->current_state.current_lane - 1,
-                                      this->current_state.current_lane - 1));
+                                      this->current_state.future_lane,
+                                      this->current_state.future_lane));
         future_states.push_back(State(LongitudinalState::MAINTAIN_COURSE,
                                       LateralState::STAY_IN_LANE,
                                       this->current_state.current_lane,
@@ -131,8 +131,8 @@ vector<State> StateMachine::nextPossibleStates()
     case LateralState::PREPARE_CHANGE_LANE_RIGHT:
         future_states.push_back(State(LongitudinalState::MAINTAIN_COURSE,
                                       LateralState::CHANGE_LANE_RIGHT,
-                                      this->current_state.current_lane + 1,
-                                      this->current_state.current_lane + 1));
+                                      this->current_state.future_lane,
+                                      this->current_state.future_lane));
         future_states.push_back(State(LongitudinalState::MAINTAIN_COURSE,
                                       LateralState::STAY_IN_LANE,
                                       this->current_state.current_lane,
@@ -144,10 +144,16 @@ vector<State> StateMachine::nextPossibleStates()
         break;
 
     default:
+        cout << "*** DEFAULT CASE INVOKED: "
+             << "*  - current state state: (" << this->current_state.s_state
+             << "," << this->current_state.d_state << ")"
+             << " >>>>>> " << this->current_state.current_lane << " -> " << this->current_state.future_lane
+             << endl;
+
         future_states.push_back(State(LongitudinalState::MAINTAIN_COURSE,
                                       LateralState::STAY_IN_LANE,
-                                      this->current_state.future_lane,
-                                      this->current_state.future_lane));
+                                      this->current_state.current_lane,
+                                      this->current_state.current_lane));
 
         // case LateralState::CHANGE_LANE_LEFT:
         //     future_states.push_back(State(LongitudinalState::MAINTAIN_COURSE,

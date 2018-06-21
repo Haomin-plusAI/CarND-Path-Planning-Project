@@ -232,20 +232,20 @@ int main()
           double lowest_cost = 10000;
           bool state_chosen = false;
 
-          int h_space = 15;
-          cout << left << setw(h_space) << setfill(' ') << "State/Cost";
-          cout << left << setw(h_space) << setfill(' ') << "| LANE_CENTER";
-          cout << left << setw(h_space) << setfill(' ') << "| SPEED";
-          cout << left << setw(h_space) << setfill(' ') << "| AVG SPEED DS";
-          cout << left << setw(h_space) << setfill(' ') << "| DIST SL ";
-          cout << left << setw(h_space) << setfill(' ') << "| CHANGE LANE";
-          cout << left << setw(h_space) << setfill(' ') << "| DIST FL";
-          cout << left << setw(h_space) << setfill(' ') << "| DIST ADJ";
-          cout << left << setw(h_space) << setfill(' ') << "| DIST GOAL";
-          cout << left << setw(h_space) << setfill(' ') << "| SPEED DIFF";
-          cout << left << setw(h_space) << setfill(' ') << "| COLLISION";
-          cout << left << setw(h_space) << setfill(' ') << "| Total";
-          cout << endl;
+          // int h_space = 15;
+          // cout << left << setw(h_space) << setfill(' ') << "State/Cost";
+          // cout << left << setw(h_space) << setfill(' ') << "| LANE_CENTER";
+          // cout << left << setw(h_space) << setfill(' ') << "| SPEED";
+          // cout << left << setw(h_space) << setfill(' ') << "| AVG SPEED DS";
+          // cout << left << setw(h_space) << setfill(' ') << "| DIST SL ";
+          // cout << left << setw(h_space) << setfill(' ') << "| CHANGE LANE";
+          // cout << left << setw(h_space) << setfill(' ') << "| DIST FL";
+          // cout << left << setw(h_space) << setfill(' ') << "| DIST ADJ";
+          // cout << left << setw(h_space) << setfill(' ') << "| DIST GOAL";
+          // cout << left << setw(h_space) << setfill(' ') << "| SPEED DIFF";
+          // cout << left << setw(h_space) << setfill(' ') << "| COLLISION";
+          // cout << left << setw(h_space) << setfill(' ') << "| Total";
+          // cout << endl;
 
           if (main_trajectory.size() == 0)
           {

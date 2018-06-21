@@ -53,9 +53,8 @@ Trajectory Behaviour::nextTrajectory(const Vehicle &ego, const vector<Vehicle> &
     {
         // Make sure our main trajectory mirrors points in the previous_path
         this->trajectory.removeFirstN(points_consumed);
-        cout << "*******************************************************" << endl;
-        cout << "Trajectories updated: size=" << this->trajectory.size() << endl;
-        cout << "Previous path size: size=" << previous_path_x.size() << endl;
+        // cout << "Trajectories updated: size=" << this->trajectory.size() << endl;
+        // cout << "Previous path size: size=" << previous_path_x.size() << endl;
     }
     this->current_timestep += points_consumed;
 
@@ -178,19 +177,21 @@ Trajectory Behaviour::nextTrajectory(const Vehicle &ego, const vector<Vehicle> &
 vector<State> Behaviour::update(const Vehicle &ego, const vector<Vehicle> others,
                                 Trajectory &current_trajectory)
 {
-    ++this->current_timestep;
+
     State current_state = this->state_machine.getCurrentState();
-    // cout << "* UPDATE - current state: (" << current_state.s_state
-    //      << "," << current_state.d_state << ")"
-    //      << ">>>>>> " << current_state.current_lane << " -> " << current_state.future_lane
-    //      << endl;
+    if (this->current_timestep < this->lock_timestep)
+    {
+        cout << "*** UPDATES FROZEN RETURNING CURRENT STATE: "
+             << this->current_timestep << " < " << this->lock_timestep
+             << endl;
+        return {current_state};
+    }
 
     auto next_states = this->state_machine.nextPossibleStates();
 
     vector<State> reachable_next_states;
     for (const State &next_state : next_states)
     {
-
         if (!isLaneValid(next_state.current_lane) || !isLaneValid(next_state.future_lane))
         {
             continue;
@@ -218,7 +219,6 @@ void Behaviour::updateState(State new_state)
          new_state.d_state == LateralState::CHANGE_LANE_RIGHT))
     {
         this->lock_timestep = this->current_timestep + 25;
-        return;
         // tlock = 50;
         //   cout << "*********************************************************************************" << endl;
         // cout << "*********************************************************************************" << endl;
@@ -227,15 +227,6 @@ void Behaviour::updateState(State new_state)
         // cout << "*********************************************************************************" << endl;
         cout << "*** FREEZING state updates for " << this->lock_timestep << "timesteps";
     }
-
-    if (this->current_timestep < this->lock_timestep)
-    {
-        cout << "*** UPDATES FROZEN RETURNING CURRENT STATE: "
-             << this->current_timestep << " < " << this->lock_timestep
-             << endl;
-        return;
-    }
-
     this->state_machine.updateState(new_state, this->lock_timestep);
 }
 

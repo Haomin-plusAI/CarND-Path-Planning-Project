@@ -35,6 +35,14 @@ PathValidationStatus PathValidator::validate(const Vehicle &ego,
         }
     }
 
+    if (!isLaneValid(state.current_lane) || !isLaneValid(state.future_lane))
+    {
+        cout << "** PATH current or future lane outside bounds: "
+             << state.current_lane << " ---> " << state.current_lane
+             << endl;
+        return PathValidationStatus::OUTSIDE_OF_LANE;
+    }
+
     // if(!isLaneValid(state.current_lane) || !isLaneValid(state.future_lane))
     // {
     //     return PathValidationStatus::OUTSIDE_OF_LANE;
