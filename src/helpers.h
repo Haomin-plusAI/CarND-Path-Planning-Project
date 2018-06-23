@@ -17,14 +17,13 @@ using namespace std;
 const double MAX_SPEED_METERS_PER_SECOND = 22.0;
 const double CONTROLLER_UPDATE_RATE_SECONDS = 0.02;
 
-const double VEHICLE_DISTANCE_THRESHOLD_METERS = 30;
+const double VEHICLE_DISTANCE_THRESHOLD_METERS = 25;
 
-const double VEHICLE_MIN_SECURITY_DISTANCE_METERS = 20.0;
+const double VEHICLE_MIN_SECURITY_DISTANCE_LANE_CHANGE_METERS = 15.0;
 
-const double VEHICLE_COLLISION_THRESHOLD_METERS = 12.0;
+const double VEHICLE_COLLISION_THRESHOLD_METERS = 15.0;
 
-// TODO It is better to make this configurable
-const double GOAL_POSITION_METERS = 10000;
+const double MAX_TRACK_S = 6945.554;
 
 const int LANES_COUNT = 3;
 const double DEFAULT_LANE_SPACING = 4.0;

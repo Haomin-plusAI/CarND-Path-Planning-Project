@@ -126,7 +126,7 @@ vector<double> Map::toFrenet(double x, double y, double theta)
 
 vector<double> Map::toRealWorldXY(double s, double d)
 {
-	s = fmod(s, 6945.554);
+	s = fmod(s, MAX_TRACK_S);
 	// Use the spline we have created to get a smoother path
 	double x = sp_x_s(s) + d * sp_dx_s(s);
 	double y = sp_y_s(s) + d * sp_dy_s(s);

@@ -32,8 +32,8 @@ Collision CollisionDetector::predictCollision(const Vehicle &vehicle, double tim
         double ref_x = trajectory.xs[i];
         double ref_y = trajectory.ys[i];
 
-        double v_predcited_x = vehicle.x + vehicle.vx * timestep * (i + 1);
-        double v_predcited_y = vehicle.y + vehicle.vy * timestep * (i + 1);
+        double v_predcited_x = vehicle.x + vehicle.vx * timestep * i;
+        double v_predcited_y = vehicle.y + vehicle.vy * timestep * i;
 
         vector<double> frenet = map.toFrenet(v_predcited_x, v_predcited_y, vehicle.theta);
 
@@ -41,24 +41,20 @@ Collision CollisionDetector::predictCollision(const Vehicle &vehicle, double tim
         int ego_lane = calculateLane(this->trajectory.ds[i], DEFAULT_LANE_SPACING, DEFAULT_LANE_INSIDE_OFFSET);
         int v_lane = calculateLane(frenet[1], DEFAULT_LANE_SPACING, DEFAULT_LANE_INSIDE_OFFSET);
 
-        if (ego_lane < 0 || ego_lane >= LANES_COUNT)
-        {
-            continue;
-        }
+        // if (ego_lane < 0 || ego_lane >= LANES_COUNT)
+        // {
+        //     continue;
+        // }
 
-        if (v_lane < 0 || v_lane >= LANES_COUNT)
-        {
-            continue;
-        }
-
-        // if(ego_lane != v_lane)
+        // if (v_lane < 0 || v_lane >= LANES_COUNT)
         // {
         //     continue;
         // }
 
         double dist = distance(ref_x, ref_y, v_predcited_x, v_predcited_y);
 
-        if (dist < VEHICLE_COLLISION_THRESHOLD_METERS)
+        // TODO Put this into a constant
+        if (dist < 10)
         {
             cout << ">>>>>>>>>>>>** Collision timestep = " << i << endl;
             return Collision(vehicle, true, ref_x, ref_y, (double)i);

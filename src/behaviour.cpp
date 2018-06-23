@@ -30,7 +30,7 @@ Trajectory Behaviour::nextTrajectory(const Vehicle &ego, const vector<Vehicle> &
     bool state_chosen = false;
 
     PathValidator path_validator = PathValidator();
-    double time_interval = this->current_timestep == 0 ? 1.0 : 1.6;
+    double time_interval = 1.6;
     int from_point = this->current_timestep == 0 ? 0 : 25;
 
     if (this->current_timestep == 0)
@@ -61,8 +61,6 @@ Trajectory Behaviour::nextTrajectory(const Vehicle &ego, const vector<Vehicle> &
     cout << "----------------------------- TIMESTEP " << this->current_timestep << " -----------------------------" << endl;
 
     vector<State> next_states = this->update(ego, vehicles, this->trajectory);
-
-    // TODO Move PathGenerator into behvaviour layer
     PathGenerator path_gen = PathGenerator(ego, this->trajectory);
 
     int h_space = 15;
@@ -101,10 +99,10 @@ Trajectory Behaviour::nextTrajectory(const Vehicle &ego, const vector<Vehicle> &
             double cost_speed = cost_speed_fn(ego, vehicles, path, state, 1.0);
 
             CostFunction avg_speed_lane_diff_fn = averageLaneSpeedDiffCostFunction;
-            double avg_speed_lane_diff_cost = avg_speed_lane_diff_fn(ego, vehicles, path, state, 10.0);
+            double avg_speed_lane_diff_cost = avg_speed_lane_diff_fn(ego, vehicles, path, state, 50.0);
 
             CostFunction dist_cars_cost_fn = distanceToClosestCarAheadCostFunction;
-            double cost_dist_cars = dist_cars_cost_fn(ego, vehicles, path, state, 5.0);
+            double cost_dist_cars = dist_cars_cost_fn(ego, vehicles, path, state, 100.0);
 
             CostFunction change_lane_cost_fn = laneChangeCostFunction;
             double change_lane_cost = change_lane_cost_fn(ego, vehicles, path, state, 10.0);
@@ -119,8 +117,8 @@ Trajectory Behaviour::nextTrajectory(const Vehicle &ego, const vector<Vehicle> &
             double collision_time_cost = collision_time_cost_fn(ego, vehicles, path, state, 100.0);
 
             CostFunction dist_car_future_lane_cost_fn = distanceToClosestCarAheadFutureLaneCostFunction;
-            // double dist_car_future_lane_cost = dist_car_future_lane_cost_fn(ego, vehicles, path, state, 100.0);
-            double dist_car_future_lane_cost = 0.0;
+            double dist_car_future_lane_cost = dist_car_future_lane_cost_fn(ego, vehicles, path, state, 100.0);
+            // double dist_car_future_lane_cost = 0.0;
 
             CostFunction lon_dist_adjacent_car_cost_fn = longitudinalDistanceToClosestAdjacentCarFunction;
             double lon_dist_adjacent_car_cost = lon_dist_adjacent_car_cost_fn(ego, vehicles, path, state, 1000.0);
@@ -219,12 +217,6 @@ void Behaviour::updateState(State new_state)
          new_state.d_state == LateralState::CHANGE_LANE_RIGHT))
     {
         this->lock_timestep = this->current_timestep + 25;
-        // tlock = 50;
-        //   cout << "*********************************************************************************" << endl;
-        // cout << "*********************************************************************************" << endl;
-        // cout << "*********************************************************************************" << endl;
-        // cout << "*********************************************************************************" << endl;
-        // cout << "*********************************************************************************" << endl;
         cout << "*** FREEZING state updates for " << this->lock_timestep << "timesteps";
     }
     this->state_machine.updateState(new_state, this->lock_timestep);
