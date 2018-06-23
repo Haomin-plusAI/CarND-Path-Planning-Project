@@ -360,7 +360,8 @@ double collisionTimeCostFunction(const Vehicle &ego, const vector<Vehicle> &othe
     {
         return 0.0;
     }
-    double diff = 75 - collision.collision_timestep;
+    double speed_ratio = ego_speed / MAX_SPEED_METERS_PER_SECOND;
+    double diff = 75 - (collision.collision_timestep + speed_ratio);
 
     // Otherwise penalize as a factor of the time to collision - the further away in time the better
     return weight * (1 - exp(-abs(diff)));
