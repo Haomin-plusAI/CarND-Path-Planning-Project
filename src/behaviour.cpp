@@ -97,6 +97,7 @@ Trajectory Behaviour::nextTrajectory(const Vehicle &ego, const vector<Vehicle> &
 
             CostFunction cost_speed_fn = speedCostFunction;
             double cost_speed = cost_speed_fn(ego, vehicles, path, state, 1.0);
+            // double cost_speed = 0.0;
 
             CostFunction avg_speed_lane_diff_fn = averageLaneSpeedDiffCostFunction;
             double avg_speed_lane_diff_cost = avg_speed_lane_diff_fn(ego, vehicles, path, state, 50.0);
@@ -111,10 +112,10 @@ Trajectory Behaviour::nextTrajectory(const Vehicle &ego, const vector<Vehicle> &
             double future_dist_to_goal_cost = future_dist_to_goal_cost_fn(ego, vehicles, path, state, 1.0);
 
             CostFunction speed_diff_to_car_ahead_fn = speedDifferenceWithClosestCarAheadCostFunction;
-            double speed_diff_to_car_ahead_cost = speed_diff_to_car_ahead_fn(ego, vehicles, path, state, 100.0);
+            double speed_diff_to_car_ahead_cost = speed_diff_to_car_ahead_fn(ego, vehicles, path, state, 10.0);
 
             CostFunction collision_time_cost_fn = collisionTimeCostFunction;
-            double collision_time_cost = collision_time_cost_fn(ego, vehicles, path, state, 100.0);
+            double collision_time_cost = collision_time_cost_fn(ego, vehicles, path, state, 1000.0);
 
             CostFunction dist_car_future_lane_cost_fn = distanceToClosestCarAheadFutureLaneCostFunction;
             double dist_car_future_lane_cost = dist_car_future_lane_cost_fn(ego, vehicles, path, state, 100.0);
@@ -216,7 +217,7 @@ void Behaviour::updateState(State new_state)
         (current_state.d_state == LateralState::PREPARE_CHANGE_LANE_RIGHT &&
          new_state.d_state == LateralState::CHANGE_LANE_RIGHT))
     {
-        this->lock_timestep = this->current_timestep + 25;
+        this->lock_timestep = this->current_timestep + 50;
         cout << "*** FREEZING state updates for " << this->lock_timestep << "timesteps";
     }
     this->state_machine.updateState(new_state, this->lock_timestep);

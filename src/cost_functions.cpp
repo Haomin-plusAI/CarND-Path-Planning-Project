@@ -20,6 +20,9 @@ double speedCostFunction(const Vehicle &ego, const vector<Vehicle> &others, cons
     }
 
     double diff = (MAX_SPEED_METERS_PER_SECOND - avg_speed) / MAX_SPEED_METERS_PER_SECOND;
+    // double diff = (MAX_SPEED_METERS_PER_SECOND - avg_speed);
+    // double diff = avg_speed / MAX_SPEED_METERS_PER_SECOND;
+    cout << "**** Speed diff " << diff << endl;
     return weight * (1 - exp(-abs(diff)));
 }
 
@@ -112,11 +115,10 @@ double longitudinalDistanceToClosestAdjacentCarFunction(const Vehicle &ego, cons
     double min_distance = VEHICLE_DISTANCE_THRESHOLD_METERS;
     for (const Vehicle &v : others)
     {
-        // Other car must be ahead in the same lane
         if (v.isInLane && v.lane == state.future_lane)
         {
             // Other car is on different lane
-            double dist = abs(ego.s - v.s);
+            double dist = distance(ego.x, ego.y, v.x, v.y);
             if (dist < min_distance)
             {
                 min_distance = dist;
@@ -356,12 +358,17 @@ double collisionTimeCostFunction(const Vehicle &ego, const vector<Vehicle> &othe
     // cout << "** Collision with vehicle at timestep = " << collision.collision_timestep << endl;
 
     // Collision is far away so can be ignored for now
-    if (collision.collision_timestep > 75)
+    if (collision.collision_timestep > COLLISION_MAX_TIMESTEP_THRESHOLD)
     {
         return 0.0;
     }
     double speed_ratio = ego_speed / MAX_SPEED_METERS_PER_SECOND;
-    double diff = 75 - (collision.collision_timestep + speed_ratio);
+    double timestep_ratio = (COLLISION_MAX_TIMESTEP_THRESHOLD - collision.collision_timestep) / COLLISION_MAX_TIMESTEP_THRESHOLD;
+    cout << "*** SPEED RATIO = " << speed_ratio << endl;
+    cout << "*** TIMESTEP RATIO = " << timestep_ratio << endl;
+    // double diff = 75 - (collision.collision_timestep + 5 * speed_ratio);
+    double diff = speed_ratio + timestep_ratio;
+    cout << "*** TIMESTEP + SPEED RATIO = " << diff << endl;
 
     // Otherwise penalize as a factor of the time to collision - the further away in time the better
     return weight * (1 - exp(-abs(diff)));
