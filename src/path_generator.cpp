@@ -48,10 +48,10 @@ vector<Trajectory> PathGenerator::generatePaths(const State &state, const Vehicl
         break;
     case LongitudinalState::ACCELERATE:
         // Increase speed by 10%
-        target_s_vel = speed_at_index == 0 ? 3.0 : speed_at_index * (1.08);
+        target_s_vel = speed_at_index == 0 ? 3.0 : speed_at_index * (1.05);
         break;
     case LongitudinalState::DECELERATE:
-        target_s_vel = speed_at_index * 0.80;
+        target_s_vel = speed_at_index * 0.90;
         break;
     case LongitudinalState::STOP:
         target_s_vel = speed_at_index * 0.6;

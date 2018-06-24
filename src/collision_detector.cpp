@@ -54,7 +54,7 @@ Collision CollisionDetector::predictCollision(const Vehicle &vehicle, double tim
         double dist = distance(ref_x, ref_y, v_predcited_x, v_predcited_y);
 
         // TODO Put this into a constant
-        if (dist < 10)
+        if (dist < 15)
         {
             cout << ">>>>>>>>>>>>** Collision timestep = " << i << endl;
             return Collision(vehicle, true, ref_x, ref_y, (double)i);

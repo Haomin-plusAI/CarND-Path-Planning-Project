@@ -66,10 +66,10 @@ double distanceToClosestCarAheadCostFunction(const Vehicle &ego, const vector<Ve
                                              const State &state, const double &weight)
 {
     // We are switching lanes and this is not a cancellable operation
-    if (state.d_state == LateralState::CHANGE_LANE_LEFT || state.d_state == LateralState::CHANGE_LANE_RIGHT)
-    {
-        return 0;
-    }
+    // if (state.d_state == LateralState::CHANGE_LANE_LEFT || state.d_state == LateralState::CHANGE_LANE_RIGHT)
+    // {
+    //     return 0;
+    // }
 
     // Find closest car ahead and get distance
     if (!ego.isInLane)
@@ -99,7 +99,7 @@ double distanceToClosestCarAheadCostFunction(const Vehicle &ego, const vector<Ve
     }
 
     // TODO We may also want to take speed into account
-    double diff = (VEHICLE_DISTANCE_THRESHOLD_METERS - min_distance);
+    double diff = (VEHICLE_DISTANCE_THRESHOLD_METERS - min_distance) / VEHICLE_DISTANCE_THRESHOLD_METERS;
     return weight * (1 - exp(-abs(diff)));
 }
 
@@ -152,7 +152,7 @@ double distanceToClosestCarAheadFutureLaneCostFunction(const Vehicle &ego, const
     for (const Vehicle &v : others)
     {
         // Other car must be ahead in the same lane
-        if (v.isInLane && v.lane == state.future_lane && v.s > ego.s)
+        if (v.isInLane && v.lane == state.future_lane && v.s >= ego.s)
         {
             double dist = distance(ego.x, ego.y, v.x, v.y);
             if (dist < min_distance)
@@ -162,7 +162,7 @@ double distanceToClosestCarAheadFutureLaneCostFunction(const Vehicle &ego, const
         }
     }
 
-    double diff = (VEHICLE_DISTANCE_THRESHOLD_METERS - min_distance);
+    double diff = (VEHICLE_DISTANCE_THRESHOLD_METERS - min_distance) / VEHICLE_DISTANCE_THRESHOLD_METERS;
     return weight * (1 - exp(-abs(diff)));
 }
 
@@ -214,7 +214,7 @@ double averageLaneSpeedDiffCostFunction(const Vehicle &ego, const vector<Vehicle
     }
 
     // This time, let's get a ratio as it will produce a smoother result
-    double diff = speed_avg / MAX_SPEED_METERS_PER_SECOND;
+    double diff = (MAX_SPEED_METERS_PER_SECOND - speed_avg) / MAX_SPEED_METERS_PER_SECOND;
     return weight * (1 - exp(-abs(diff)));
 }
 
@@ -224,7 +224,7 @@ double speedDifferenceWithClosestCarAheadCostFunction(const Vehicle &ego, const 
     // TODO need to review this
     if (!ego.isInLane)
     {
-        return weight;
+        return 0.0;
     }
 
     vector<Vehicle> ahead = ego.ahead(others, state.current_lane);
@@ -258,8 +258,8 @@ double speedDifferenceWithClosestCarAheadCostFunction(const Vehicle &ego, const 
     double ego_speed = trajectory.averageSpeed(1.0);
     double v_speed = closest_vehicle.getSpeed();
 
-    // cout << "** Future ego speed (future lane=" << state.future_lane << ", current lane=" << state.current_lane << ") : " << ego_speed
-    //      << " other vehicle (lane=" << closest_vehicle.lane <<  ") : " << closest_vehicle.getSpeed() << endl;
+    cout << "** Future ego speed (future lane=" << state.future_lane << ", current lane=" << state.current_lane << ") : " << ego_speed
+         << " other vehicle (lane=" << closest_vehicle.lane << ") : " << v_speed << endl;
 
     // If ego is going faster than the vehicle ahead then we want to penalise it because it could lead to a collision
     if (ego_speed > v_speed)
@@ -328,7 +328,7 @@ double collisionTimeCostFunction(const Vehicle &ego, const vector<Vehicle> &othe
     Vehicle closest_vehicle;
     for (const Vehicle &v : others)
     {
-        if (v.isInLane && (v.lane == state.current_lane || v.lane == state.future_lane) && v.s > ego.s)
+        if (v.isInLane && (v.lane == state.current_lane || v.lane == state.future_lane) && v.s >= ego.s)
         {
             double dist = distance(ego.x, ego.y, v.x, v.y);
             if (dist < min_distance)
