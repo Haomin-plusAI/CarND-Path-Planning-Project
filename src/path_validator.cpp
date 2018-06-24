@@ -28,7 +28,7 @@ PathValidationStatus PathValidator::validate(const Vehicle &ego,
     // cout << "*** EGO SPEED " << ego.getSpeed() << endl;
     if (state.d_state != LateralState::STAY_IN_LANE)
     {
-        if (trajectory.averageSpeed(trajectory.size()) < 9)
+        if (trajectory.averageSpeed(trajectory.size()) < MIN_SPEED_FOR_LANE_CHANGE_METERS_PER_SECOND)
         {
             // cout << "VELOCITY TOO LOW FOR LANE CHANGE " << trajectory.averageSpeed(trajectory.size()) << endl;
             return PathValidationStatus::VELOCITY_TOO_LOW_FOR_LANE_CHANGE;
@@ -93,7 +93,9 @@ PathValidationStatus PathValidator::validate(const Vehicle &ego,
     double prev_velocity = 0.0;
     double total_velocity = 0.0;
     int segment_size = trajectory.size() - from_point;
-    for (int i = from_point + 1; i < trajectory.size(); ++i)
+    
+    // We are interested in the path for the last second
+    for (int i = from_point + 1; i < 50; ++i)
     {
         double last_x = trajectory.xs[i - 1];
         double last_y = trajectory.ys[i - 1];
@@ -105,11 +107,11 @@ PathValidationStatus PathValidator::validate(const Vehicle &ego,
         // cout << "**** DISTANCE  = " << vel << endl;
         // cout << "**** VELOCITY  = " << vel / CONTROLLER_UPDATE_RATE_SECONDS << endl;
 
-        // if (vel / CONTROLLER_UPDATE_RATE_SECONDS > 22.2)
-        // {
-        //     cout << "**** MAXIMUM VELOCITY ABOVE THRESHOLD = " << vel / CONTROLLER_UPDATE_RATE_SECONDS << endl;
-        //     return PathValidationStatus::VELOCITY_ABOVE_THRESHOLD;
-        // }
+        if (vel / CONTROLLER_UPDATE_RATE_SECONDS > MAX_LEGAL_SPEED_LIMIT_METERS_PER_SECOND)
+        {
+            cout << "**** MAXIMUM VELOCITY ABOVE THRESHOLD = " << vel / CONTROLLER_UPDATE_RATE_SECONDS << endl;
+            return PathValidationStatus::VELOCITY_ABOVE_THRESHOLD;
+        }
 
         total_velocity += vel;
         double acc = i == from_point ? 0.0 : vel - prev_velocity;

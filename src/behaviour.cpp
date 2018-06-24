@@ -84,11 +84,12 @@ Trajectory Behaviour::nextTrajectory(const Vehicle &ego, const vector<Vehicle> &
 
         for (auto &path : paths)
         {
-            PathValidationStatus path_status = path_validator.validate(ego, vehicles, state, path, from_point);
-            // cout << "*** PATH VALIDATION STATUS =  for state (" << state.s_state << ", " << state.d_state << ") ="
-            // << path_status << endl;
+            PathValidationStatus path_status = path_validator.validate(ego, vehicles, state, path, 0);            
+            
             if (path_status != PathValidationStatus::VALID)
             {
+                cout << "*** IGNORING STATE - PATH VALIDATION STATUS =  for state (" << state.s_state << ", " << state.d_state << ") = "
+                     << path_status << endl;
                 continue;
             }
 
@@ -106,7 +107,8 @@ Trajectory Behaviour::nextTrajectory(const Vehicle &ego, const vector<Vehicle> &
             double cost_dist_cars = dist_cars_cost_fn(ego, vehicles, path, state, 100.0);
 
             CostFunction change_lane_cost_fn = laneChangeCostFunction;
-            double change_lane_cost = change_lane_cost_fn(ego, vehicles, path, state, 10.0);
+            double change_lane_cost = change_lane_cost_fn(ego, vehicles, path, state, 5.0);
+            // double change_lane_cost = 0.0;
 
             CostFunction future_dist_to_goal_cost_fn = futureDistanceToGoalCostFunction;
             double future_dist_to_goal_cost = future_dist_to_goal_cost_fn(ego, vehicles, path, state, 1.0);
@@ -118,13 +120,21 @@ Trajectory Behaviour::nextTrajectory(const Vehicle &ego, const vector<Vehicle> &
             double collision_time_cost = collision_time_cost_fn(ego, vehicles, path, state, 10000.0);
 
             CostFunction dist_car_future_lane_cost_fn = distanceToClosestCarAheadFutureLaneCostFunction;
-            double dist_car_future_lane_cost = dist_car_future_lane_cost_fn(ego, vehicles, path, state, 100.0);
+            double dist_car_future_lane_cost = dist_car_future_lane_cost_fn(ego, vehicles, path, state, 1000.0);
             // double dist_car_future_lane_cost = 0.0;
 
             CostFunction lon_dist_adjacent_car_cost_fn = longitudinalDistanceToClosestAdjacentCarFunction;
-            double lon_dist_adjacent_car_cost = lon_dist_adjacent_car_cost_fn(ego, vehicles, path, state, 1000.0);
+            // double lon_dist_adjacent_car_cost = lon_dist_adjacent_car_cost_fn(ego, vehicles, path, state, 1000.0);
+            double lon_dist_adjacent_car_cost = 0.0;
 
-            double final_cost = lane_center_cost + cost_speed + avg_speed_lane_diff_cost + cost_dist_cars + change_lane_cost + future_dist_to_goal_cost + speed_diff_to_car_ahead_cost + collision_time_cost + dist_car_future_lane_cost + lon_dist_adjacent_car_cost;
+            double final_cost = lane_center_cost 
+                                + cost_speed 
+                                + avg_speed_lane_diff_cost 
+                                + cost_dist_cars + change_lane_cost 
+                                + future_dist_to_goal_cost 
+                                + speed_diff_to_car_ahead_cost 
+                                + collision_time_cost + dist_car_future_lane_cost 
+                                + lon_dist_adjacent_car_cost;
 
             cout << left << "(" << state.s_state << "," << state.d_state << ")"
                  << ":" << state.current_lane << "->" << state.future_lane << endl;
@@ -153,7 +163,7 @@ Trajectory Behaviour::nextTrajectory(const Vehicle &ego, const vector<Vehicle> &
 
     cout << "*  - Chosen state: (" << chosen_state.s_state
          << "," << chosen_state.d_state << ")"
-         << " >>>>>> " << chosen_state.current_lane << " -> " << chosen_state.future_lane
+         << " lane transition: " << chosen_state.current_lane << " -> " << chosen_state.future_lane
          << endl;
 
     // Make sure to remove the first position, since the car is already "there"
@@ -165,7 +175,8 @@ Trajectory Behaviour::nextTrajectory(const Vehicle &ego, const vector<Vehicle> &
     }
     else
     {
-        cout << "!!!!!! No lowest cost found - using current trajectory for now !!!!" << endl;
+        cout << "!!!!!! No lowest cost found - using current trajectory for now !!!!!!" << endl;
+        chosen_trajectory = this->trajectory;
     }
 
     this->updateState(chosen_state);

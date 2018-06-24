@@ -48,25 +48,6 @@ void StateMachine::updateState(State next_state, int keep_until_timestep)
 
 vector<State> StateMachine::nextPossibleStates()
 {
-    // cout << "*** STATE MACHINE TIMESTEPS: "
-    //          << this->current_timestep << " < " << this->timestep_lock
-    //          << endl;
-
-    // TODO if the LONGITUDINAL state is stop return STOP and stay in LANE
-    // THIS IS VERY IMPORTANT!!
-
-    // if (this->current_timestep < this->timestep_lock)
-    // {
-    //     cout << "*** UPDATES FROZEN RETURNING CURRENT STATE: "
-    //          << this->current_timestep << " < " << this->timestep_lock
-    //          << endl;
-    //     // If we have a timestep lock then simply return the current state
-    //     return {this->current_state};
-    // }
-
-    LongitudinalState lon_state;
-    LateralState lat_state;
-
     vector<State> future_states;
     switch (this->current_state.d_state)
     {
@@ -143,39 +124,11 @@ vector<State> StateMachine::nextPossibleStates()
                                       this->current_state.current_lane));
         break;
 
-    default:
-        cout << "*** DEFAULT CASE INVOKED: "
-             << "*  - current state state: (" << this->current_state.s_state
-             << "," << this->current_state.d_state << ")"
-             << " >>>>>> " << this->current_state.current_lane << " -> " << this->current_state.future_lane
-             << endl;
-
+    default:       
         future_states.push_back(State(LongitudinalState::MAINTAIN_COURSE,
                                       LateralState::STAY_IN_LANE,
                                       this->current_state.current_lane,
-                                      this->current_state.current_lane));
-
-        // case LateralState::CHANGE_LANE_LEFT:
-        //     future_states.push_back(State(LongitudinalState::MAINTAIN_COURSE,
-        //                                   LateralState::CHANGE_LANE_LEFT,
-        //                                   this->current_state.current_lane,
-        //                                   this->current_state.future_lane));
-        //     future_states.push_back(State(LongitudinalState::MAINTAIN_COURSE,
-        //                                   LateralState::STAY_IN_LANE,
-        //                                   this->current_state.current_lane,
-        //                                   this->current_state.current_lane));
-        //     break;
-
-        // case LateralState::CHANGE_LANE_RIGHT:
-        //     future_states.push_back(State(LongitudinalState::MAINTAIN_COURSE,
-        //                                   LateralState::CHANGE_LANE_RIGHT,
-        //                                   this->current_state.current_lane,
-        //                                   this->current_state.future_lane));
-        //     future_states.push_back(State(LongitudinalState::MAINTAIN_COURSE,
-        //                                   LateralState::STAY_IN_LANE,
-        //                                   this->current_state.current_lane,
-        //                                   this->current_state.current_lane));
-        //     break;
+                                      this->current_state.current_lane));       
     }
     return future_states;
 }
