@@ -210,6 +210,7 @@ double averageLaneSpeedDiffCostFunction(const Vehicle &ego, const vector<Vehicle
     }
 
     double speed_avg = 0.0;
+    // TODO only look 100M ahead
     for (const Vehicle &v : ahead)
     {
         speed_avg += v.getSpeed();
@@ -385,40 +386,6 @@ double collisionTimeCostFunction(const Vehicle &ego, const vector<Vehicle> &othe
     return weight * (1 - exp(-abs(diff)));
 }
 
-// double futureDistanceToClosestCarAheadCostFunction(const Vehicle& ego, const vector<Vehicle>& others,  const Trajectory& trajectory,
-//                                              const State& state, const double& weight)
-// {
-//     // Find closest car ahead and get distance
-//     if(!ego.isInLane)
-//     {
-//         return weight;
-//     }
-
-//     int traj_size = trajectory.size();
-//     double timesteps_ahead = traj_size * CONTROLLER_UPDATE_RATE_SECONDS;
-//     double ego_future_s = trajectory.ss[traj_size - 1];
-//     double ego_future_x = trajectory.xs[traj_size - 1];
-//     double ego_future_y = trajectory.ys[traj_size - 1];
-
-//     double min_distance = VEHICLE_DISTANCE_THRESHOLD_METERS;
-//     for(const Vehicle& v : others)
-//     {
-//         Vehicle v_future = v.predictFuturePosition(timesteps_ahead);
-
-//         // Other car must be ahead in the same lane
-//         if(v.isInLane && v.lane == ego.lane && v.s > ego.s)
-//         {
-//             double dist = distance(ego.x, ego.y, v.x, v.y);
-//             if(dist < min_distance)
-//             {
-//                 min_distance = dist;
-//             }
-//         }
-//     }
-
-//     double diff = VEHICLE_DISTANCE_THRESHOLD_METERS - min_distance;
-//     return weight * (1 - exp(- abs(diff)));
-// }
 
 /**
  * @brief Measures the distance to the goal at the end of our trajectory

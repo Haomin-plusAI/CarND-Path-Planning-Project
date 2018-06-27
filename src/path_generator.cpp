@@ -34,24 +34,37 @@ vector<Trajectory> PathGenerator::generatePaths(const State &state, const Vehicl
     double target_d_vel = 0.0;
     double target_d_acc = 0.0;
 
-    double std_s = 5.0;
+    double std_s = 2.0;
     double std_d = 0.0;
 
     double speed_at_index = current_trajectory.s_vels[from_point_index];
     double acc_at_index = current_trajectory.s_accs[from_point_index];
 
-    // cout << "EGO D STATE = " << state.d_state << endl;
     switch (state.s_state)
     {
     case LongitudinalState::MAINTAIN_COURSE:
         target_s_vel = speed_at_index;
         break;
-    case LongitudinalState::ACCELERATE:
-        // Increase speed by 10%
-        target_s_vel = speed_at_index == 0 ? 3.0 : speed_at_index * (1.05);
+    case LongitudinalState::ACCELERATE:   
+        if(speed_at_index == 0)
+        {            
+            target_s_vel = 8.0;
+        }
+        else
+        {
+            double mult = 1.05;
+
+            // Allow high acceleration at lower speeds
+            if(speed_at_index < 10)
+            {
+                mult = 1.1;
+            }
+            target_s_vel = speed_at_index * mult; 
+        }     
+        // target_s_vel = speed_at_index == 0 ? 3.0 : speed_at_index * (1.05);
         break;
     case LongitudinalState::DECELERATE:
-        target_s_vel = speed_at_index * 0.90;
+        target_s_vel = speed_at_index * 0.85;
         break;
     case LongitudinalState::STOP:
         target_s_vel = speed_at_index * 0.6;
@@ -61,40 +74,28 @@ vector<Trajectory> PathGenerator::generatePaths(const State &state, const Vehicl
     {
         // 22m/s ~ 50 MPH
         target_s_vel = 21;
-    }
-    // cout << "**** DESIRED SPEED =" << target_s_vel << endl;
+    }    
 
     double s_offset = 0.0;
     double d_at_index = current_trajectory.ds[from_point_index];
     switch (state.d_state)
     {
-    case LateralState::STAY_IN_LANE:
-        // target_d = d_at_index;
-        target_d = getLaneCenterFrenet(state.current_lane);
-        ;
+    case LateralState::STAY_IN_LANE:        
+        target_d = getLaneCenterFrenet(state.current_lane);        
         break;
-    case LateralState::PREPARE_CHANGE_LANE_LEFT:
-        // target_d = d_at_index;
-        target_d = getLaneCenterFrenet(state.current_lane);
-        ;
-        // target_d = d_at_index - 4.0;
+    case LateralState::PREPARE_CHANGE_LANE_LEFT:        
+        target_d = getLaneCenterFrenet(state.current_lane);                
         break;
-    case LateralState::PREPARE_CHANGE_LANE_RIGHT:
-        // target_d = d_at_index;
-        target_d = getLaneCenterFrenet(state.current_lane);
-        ;
-        // target_d = d_at_index + 4.0;
+    case LateralState::PREPARE_CHANGE_LANE_RIGHT:        
+        target_d = getLaneCenterFrenet(state.current_lane);        
         break;
-    case LateralState::CHANGE_LANE_LEFT:
-        // TODO find center of left lane
+    case LateralState::CHANGE_LANE_LEFT:        
         target_d = getLaneCenterFrenet(state.future_lane);
-        std_d = 1.0;
-        // s_offset = 5.0;
+        std_d = 1.0;        
         break;
     case LateralState::CHANGE_LANE_RIGHT:
         target_d = getLaneCenterFrenet(state.future_lane);
-        std_d = 1.0;
-        // s_offset = 5.0;
+        std_d = 1.0;        
         break;
     }
 
