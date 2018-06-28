@@ -210,12 +210,25 @@ double averageLaneSpeedDiffCostFunction(const Vehicle &ego, const vector<Vehicle
     }
 
     double speed_avg = 0.0;
-    // TODO only look 100M ahead
+    
+    int count = 0;
     for (const Vehicle &v : ahead)
     {
-        speed_avg += v.getSpeed();
+        double dist = distance(ego.x, ego.y, v.x, v.y);
+        // Only look a bit ahead
+        if(dist <= VEHICLE_DISTANCE_THRESHOLD_METERS * 1.5)
+        {
+            speed_avg += v.getSpeed();
+            ++count;
+        }
+        
     }
-    speed_avg /= (double)ahead.size();
+    
+    if(count == 0)
+    {
+        return 0.0;
+    }
+    speed_avg /= (double)count;
 
     cout << "** Speed average of lane " << state.future_lane << ": " << speed_avg << endl;
 
